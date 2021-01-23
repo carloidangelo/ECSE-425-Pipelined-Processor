@@ -44,6 +44,18 @@ BEGIN
 	WAIT FOR 1 * clk_period;
 	ASSERT (s_output = '0') REPORT "When reading a meaningless character, the output should be '0'" SEVERITY ERROR;
 	REPORT "_______________________";
+
+	REPORT "Example case, reading a '//' comment";
+	s_input <= SLASH_CHARACTER;
+	WAIT FOR 1 * clk_period;
+	ASSERT (s_output = '0') REPORT "When reading the first slash of a '//' comment, the output should be '0'" SEVERITY ERROR;
+	s_input <= SLASH_CHARACTER;
+	WAIT FOR 1 * clk_period;
+	ASSERT (s_output = '0') REPORT "When reading the second slash of a '//' comment, the output should be '0'" SEVERITY ERROR;
+	s_input <= "01011000";
+	WAIT FOR 1 * clk_period;
+	ASSERT (s_output = '1') REPORT "When reading the first character after the opening sequence, the output should be '1'" SEVERITY ERROR;
+	REPORT "_______________________";
     
 	WAIT;
 END PROCESS stim_process;
