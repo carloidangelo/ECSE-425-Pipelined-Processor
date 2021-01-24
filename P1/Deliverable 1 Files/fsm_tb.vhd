@@ -45,21 +45,123 @@ BEGIN
 	s_reset <= '0';
 	WAIT FOR 1 * clk_period;
 	
+	-- Test case 1: X
 	REPORT "Example case, reading a meaningless character";
+	-- Input: X
 	s_input <= "01011000";
 	WAIT FOR 1 * clk_period;
 	ASSERT (s_output = '0') REPORT "When reading a meaningless character, the output should be '0'" SEVERITY ERROR;
-
+	
+	-- Test case 2: //AS\nD
 	REPORT "Example case, reading a '//' comment";
+	-- Input: /
 	s_input <= SLASH_CHARACTER;
 	WAIT FOR 1 * clk_period;
 	ASSERT (s_output = '0') REPORT "When reading the first slash of a '//' comment, the output should be '0'" SEVERITY ERROR;
+	-- Input: /
 	s_input <= SLASH_CHARACTER;
 	WAIT FOR 1 * clk_period;
 	ASSERT (s_output = '0') REPORT "When reading the second slash of a '//' comment, the output should be '0'" SEVERITY ERROR;
-	s_input <= "01011000";
+	-- Input: A
+	s_input <= "01000001";
 	WAIT FOR 1 * clk_period;
 	ASSERT (s_output = '1') REPORT "When reading the first character after the opening sequence, the output should be '1'" SEVERITY ERROR;
+	-- Input: S
+	s_input <= "01010011";
+	WAIT FOR 1 * clk_period;
+	ASSERT (s_output = '1') REPORT "When reading the second character after the opening sequence, the output should be '1'" SEVERITY ERROR;
+	-- Input: \n
+	s_input <= NEW_LINE_CHARACTER;
+	WAIT FOR 1 * clk_period;
+	ASSERT (s_output = '1') REPORT "When reading the exit sequence, the output should be '1'" SEVERITY ERROR;
+	-- Input: D
+	s_input <= "01000100";
+	WAIT FOR 1 * clk_period;
+	ASSERT (s_output = '0') REPORT "When reading the first character after the exit sequence, the output should be '0'" SEVERITY ERROR;
+
+	-- Test case 3: /*A\nS*/D
+	REPORT "Example case, reading a '/**/' comment";
+	-- Input: /
+	s_input <= SLASH_CHARACTER;
+	WAIT FOR 1 * clk_period;
+	ASSERT (s_output = '0') REPORT "When reading the slash of a '/*' comment, the output should be '0'" SEVERITY ERROR;
+	-- Input: *
+	s_input <= STAR_CHARACTER;
+	WAIT FOR 1 * clk_period;
+	ASSERT (s_output = '0') REPORT "When reading the star of a '/*' comment, the output should be '0'" SEVERITY ERROR;
+	-- Input: A
+	s_input <= "01000001";
+	WAIT FOR 1 * clk_period;
+	ASSERT (s_output = '1') REPORT "When reading the first character after the opening sequence, the output should be '1'" SEVERITY ERROR;
+	-- Input: \n
+	s_input <= NEW_LINE_CHARACTER;
+	WAIT FOR 1 * clk_period;
+	ASSERT (s_output = '1') REPORT "When reading the exit sequence within the comment, the output should be '1'" SEVERITY ERROR;
+	-- Input: S
+	s_input <= "01010011";
+	WAIT FOR 1 * clk_period;
+	ASSERT (s_output = '1') REPORT "When reading the third character after the opening sequence, the output should be '1'" SEVERITY ERROR;
+	-- Input: *
+	s_input <= STAR_CHARACTER;
+	WAIT FOR 1 * clk_period;
+	ASSERT (s_output = '1') REPORT "When reading the star of a '*/' comment, the output should be '1'" SEVERITY ERROR;
+	-- Input: /
+	s_input <= SLASH_CHARACTER;
+	WAIT FOR 1 * clk_period;
+	ASSERT (s_output = '1') REPORT "When reading the slash of a '*/' comment, the output should be '1'" SEVERITY ERROR;
+	-- Input: D
+	s_input <= "01000100";
+	WAIT FOR 1 * clk_period;
+	ASSERT (s_output = '0') REPORT "When reading the first character after the exit sequence, the output should be '0'" SEVERITY ERROR;
+
+	-- Test case 4: //A(RESET)S
+	REPORT "Example case, testing reset for a '//' comment";
+	-- Input: /
+	s_input <= SLASH_CHARACTER;
+	WAIT FOR 1 * clk_period;
+	ASSERT (s_output = '0') REPORT "When reading the first slash of a '//' comment, the output should be '0'" SEVERITY ERROR;
+	-- Input: /
+	s_input <= SLASH_CHARACTER;
+	WAIT FOR 1 * clk_period;
+	ASSERT (s_output = '0') REPORT "When reading the second slash of a '//' comment, the output should be '0'" SEVERITY ERROR;
+	-- Input: A
+	s_input <= "01000001";
+	WAIT FOR 1 * clk_period;
+	ASSERT (s_output = '1') REPORT "When reading the first character after the opening sequence, the output should be '1'" SEVERITY ERROR;
+	-- RESET
+	s_reset <= '1';
+	WAIT FOR 1 * clk_period;
+	ASSERT (s_output = 'X') REPORT "When resetting, the output should be 'X'" SEVERITY ERROR;
+	-- Input: S
+	s_reset <= '0';
+	s_input <= "01010011";
+	WAIT FOR 1 * clk_period;
+	ASSERT (s_output = '0') REPORT "When reading the character after the RESET, the output should be '0'" SEVERITY ERROR;
+
+	-- Test case 5: /*A(RESET)S
+	REPORT "Example case, resetting within a '/**/' comment";
+	-- Input: /
+	s_input <= SLASH_CHARACTER;
+	WAIT FOR 1 * clk_period;
+	ASSERT (s_output = '0') REPORT "When reading the slash of a '/*' comment, the output should be '0'" SEVERITY ERROR;
+	-- Input: *
+	s_input <= STAR_CHARACTER;
+	WAIT FOR 1 * clk_period;
+	ASSERT (s_output = '0') REPORT "When reading the star of a '/*' comment, the output should be '0'" SEVERITY ERROR;
+	-- Input: A
+	s_input <= "01000001";
+	WAIT FOR 1 * clk_period;
+	ASSERT (s_output = '1') REPORT "When reading the first character after the opening sequence, the output should be '1'" SEVERITY ERROR;
+	-- RESET
+	s_reset <= '1';
+	WAIT FOR 1 * clk_period;
+	ASSERT (s_output = 'X') REPORT "When resetting, the output should be 'X'" SEVERITY ERROR;
+	-- Input: S
+	s_reset <= '0';
+	s_input <= "01010011";
+	WAIT FOR 1 * clk_period;
+	ASSERT (s_output = '0') REPORT "When reading the character after the RESET, the output should be '0'" SEVERITY ERROR;
+
 
     
 	WAIT;
