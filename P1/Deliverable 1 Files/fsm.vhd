@@ -28,40 +28,52 @@ begin
 fsm: process (clk, reset)
 begin
 	if (reset = '1') then 
-		current_state <= S0; 
+		current_state <= S0;
+		output <= 'X'; 
 
 	elsif (rising_edge(clk)) then
 		case current_state is
 			when S0 =>
 				if (input = SLASH_CHARACTER) then
+					output <= '0';
 					current_state <= S1;
 				else
+					output <= '0';
 					current_state <= S0;
 				end if; 
 			when S1 =>
 				if (input = SLASH_CHARACTER) then
+					output <= '0';
 					current_state <= S2;
 				elsif (input = STAR_CHARACTER) then
+					output <= '0';
 					current_state <= S3;
 				else
+					output <= '0';
 					current_state <= S0;
 				end if; 
 			when S2 =>
 				if (input = NEW_LINE_CHARACTER) then
+					output <= '1';
 					current_state <= S0;
 				else
+					output <= '1';
 					current_state <= S2;
 				end if; 
 			when S3 =>
 				if (input = STAR_CHARACTER) then
+					output <= '1';
 					current_state <= S4;
 				else
+					output <= '1';
 					current_state <= S3;
 				end if; 
 			when S4 =>
 				if (input = SLASH_CHARACTER) then
+					output <= '1';
 					current_state <= S0;
 				else
+					output <= '1';
 					current_state <= S3;
 				end if; 
 			when others =>
@@ -69,16 +81,4 @@ begin
 		end case;
 	end if;
 end process;
-
-output <= '0' when (current_state = S0 and input = SLASH_CHARACTER) else
-	  '0' when (current_state = S0 and input /= SLASH_CHARACTER) else
-	  '0' when (current_state = S1 and input = SLASH_CHARACTER) else
-	  '0' when (current_state = S1 and input = STAR_CHARACTER) else
-	  '0' when (current_state = S1 and (input /= SLASH_CHARACTER or input /= STAR_CHARACTER)) else
-	  '1' when (current_state = S2 and input = NEW_LINE_CHARACTER) else
-	  '1' when (current_state = S2 and input /= NEW_LINE_CHARACTER) else
-	  '1' when (current_state = S3 and input = STAR_CHARACTER) else
-	  '1' when (current_state = S3 and input /= STAR_CHARACTER) else
-	  '1' when (current_state = S4 and input = SLASH_CHARACTER) else
-	  '1' when (current_state = S4 and input /= SLASH_CHARACTER);
 end behavioral;

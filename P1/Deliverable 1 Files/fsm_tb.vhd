@@ -38,12 +38,17 @@ END PROCESS;
  
 --TODO: Thoroughly test your FSM
 stim_process: PROCESS
-BEGIN    
+BEGIN   
+	REPORT "Initialization (setting current state to S0)";
+	s_reset <= '1';
+	WAIT FOR 1 * clk_period;
+	s_reset <= '0';
+	WAIT FOR 1 * clk_period;
+	
 	REPORT "Example case, reading a meaningless character";
 	s_input <= "01011000";
 	WAIT FOR 1 * clk_period;
 	ASSERT (s_output = '0') REPORT "When reading a meaningless character, the output should be '0'" SEVERITY ERROR;
-	REPORT "_______________________";
 
 	REPORT "Example case, reading a '//' comment";
 	s_input <= SLASH_CHARACTER;
@@ -55,7 +60,7 @@ BEGIN
 	s_input <= "01011000";
 	WAIT FOR 1 * clk_period;
 	ASSERT (s_output = '1') REPORT "When reading the first character after the opening sequence, the output should be '1'" SEVERITY ERROR;
-	REPORT "_______________________";
+
     
 	WAIT;
 END PROCESS stim_process;

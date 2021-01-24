@@ -34,34 +34,45 @@ begin
 		case current_state is
 			when S0 =>
 				if (input = SLASH_CHARACTER) then
+					output <= '0';
 					current_state <= S1;
 				else
+					output <= '0';
 					current_state <= S0;
 				end if; 
 			when S1 =>
 				if (input = SLASH_CHARACTER) then
+					output <= '0';
 					current_state <= S2;
 				elsif (input = STAR_CHARACTER) then
+					output <= '0';
 					current_state <= S3;
 				else
+					output <= '0';
 					current_state <= S0;
 				end if; 
 			when S2 =>
 				if (input = NEW_LINE_CHARACTER) then
+					output <= '1';
 					current_state <= S0;
 				else
+					output <= '1';
 					current_state <= S2;
 				end if; 
 			when S3 =>
 				if (input = STAR_CHARACTER) then
+					output <= '1';
 					current_state <= S4;
 				else
+					output <= '1';
 					current_state <= S3;
 				end if; 
 			when S4 =>
 				if (input = SLASH_CHARACTER) then
+					output <= '1';
 					current_state <= S0;
 				else
+					output <= '1';
 					current_state <= S3;
 				end if; 
 			when others =>
@@ -69,8 +80,4 @@ begin
 		end case;
 	end if;
 end process;
-
-output <= '1' when (current_state = S2 or current_state = S3 or current_state = S4) else
-	  '0';
-
 end behavioral;
