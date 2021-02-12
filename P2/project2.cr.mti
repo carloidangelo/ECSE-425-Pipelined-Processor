@@ -1,0 +1,38 @@
+C:/Users/carlo/OneDrive/Documents/GitHub/ECSE-425-Computer-Arch/P2/memory_tb.vhd {1 {vcom -work work -2002 -explicit -stats=none C:/Users/carlo/OneDrive/Documents/GitHub/ECSE-425-Computer-Arch/P2/memory_tb.vhd
+Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+-- Loading package STANDARD
+-- Loading package TEXTIO
+-- Loading package std_logic_1164
+-- Loading package NUMERIC_STD
+-- Compiling entity memory_tb
+-- Compiling architecture behaviour of memory_tb
+
+} {} {}} C:/Users/carlo/OneDrive/Documents/GitHub/ECSE-425-Computer-Arch/P2/cache.vhd {1 {vcom -work work -2002 -explicit -stats=none {C:\Users\carlo\OneDrive\Documents\GitHub\ECSE-425-Computer-Arch\P2\cache.vhd}
+Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+-- Loading package STANDARD
+-- Loading package TEXTIO
+-- Loading package std_logic_1164
+-- Loading package NUMERIC_STD
+-- Compiling entity cache
+-- Compiling architecture arch of cache
+
+} {} {}} C:/Users/carlo/OneDrive/Documents/GitHub/ECSE-425-Computer-Arch/P2/memory.vhd {1 {vcom -work work -2002 -explicit -stats=none {C:\Users\carlo\OneDrive\Documents\GitHub\ECSE-425-Computer-Arch\P2\memory.vhd}
+Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+-- Loading package STANDARD
+-- Loading package TEXTIO
+-- Loading package std_logic_1164
+-- Loading package NUMERIC_STD
+-- Compiling entity memory
+-- Compiling architecture rtl of memory
+
+} {} {}} C:/Users/carlo/OneDrive/Documents/GitHub/ECSE-425-Computer-Arch/P2/cache_tb.vhd {0 {vcom -work work -2002 -explicit -stats=none C:/Users/carlo/OneDrive/Documents/GitHub/ECSE-425-Computer-Arch/P2/cache_tb.vhd
+Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+-- Loading package STANDARD
+-- Loading package TEXTIO
+-- Loading package std_logic_1164
+-- Loading package NUMERIC_STD
+-- Compiling entity cache_tb
+-- Compiling architecture behavior of cache_tb
+** Error: C:/Users/carlo/OneDrive/Documents/GitHub/ECSE-425-Computer-Arch/P2/cache_tb.vhd(13): near ")": (vcom-1576) expecting FUNCTION or PROCEDURE or IMPURE or PURE.
+
+} {9.0 10.0} {}}

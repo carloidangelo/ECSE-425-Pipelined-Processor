@@ -1,0 +1,155 @@
+m255
+K4
+z2
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+Z0 dC:/Users/carlo/OneDrive/Documents/GitHub/ECSE-425-Computer-Arch/P2
+Ecache
+Z1 w1613099651
+Z2 DPx4 ieee 11 numeric_std 0 22 :ASDNFgHXf_ih3J@9F3Ze1
+Z3 DPx3 std 6 textio 0 22 zE1`LPoLg^DX3Oz^4Fj1K3
+Z4 DPx4 ieee 14 std_logic_1164 0 22 eNV`TJ_GofJTzYa?f<@Oe1
+R0
+Z5 8C:\Users\carlo\OneDrive\Documents\GitHub\ECSE-425-Computer-Arch\P2\cache.vhd
+Z6 FC:\Users\carlo\OneDrive\Documents\GitHub\ECSE-425-Computer-Arch\P2\cache.vhd
+l0
+L5
+V3ZYLNEDCB4o]EBl2SD6f12
+!s100 C<;HKM7M38>>4jE0Q0h@Q2
+Z7 OV;C;10.5b;63
+32
+Z8 !s110 1613099750
+!i10b 1
+Z9 !s108 1613099750.000000
+Z10 !s90 -reportprogress|300|-work|work|-2002|-explicit|-stats=none|C:\Users\carlo\OneDrive\Documents\GitHub\ECSE-425-Computer-Arch\P2\cache.vhd|
+Z11 !s107 C:\Users\carlo\OneDrive\Documents\GitHub\ECSE-425-Computer-Arch\P2\cache.vhd|
+!i113 1
+Z12 o-work work -2002 -explicit
+Z13 tExplicit 1 CvgOpt 0
+Aarch
+R2
+R3
+R4
+DEx4 work 5 cache 0 22 3ZYLNEDCB4o]EBl2SD6f12
+l40
+L30
+VSo[52mQKnoKX48H<ZQ=491
+!s100 hBcmF^Nl[P4k:W46>jgSJ2
+R7
+32
+R8
+!i10b 1
+R9
+R10
+R11
+!i113 1
+R12
+R13
+Ecache_tb
+Z14 w1613020952
+R2
+R3
+R4
+R0
+8C:/Users/carlo/OneDrive/Documents/GitHub/ECSE-425-Computer-Arch/P2/cache_tb.vhd
+FC:/Users/carlo/OneDrive/Documents/GitHub/ECSE-425-Computer-Arch/P2/cache_tb.vhd
+l0
+L5
+V7E4^229J[_6oaW@8H^^z00
+!s100 N8hTJD?ado=UI;TQE4:Ql3
+R7
+32
+R8
+!i10b 1
+R9
+!s90 -reportprogress|300|-work|work|-2002|-explicit|-stats=none|C:/Users/carlo/OneDrive/Documents/GitHub/ECSE-425-Computer-Arch/P2/cache_tb.vhd|
+!s107 C:/Users/carlo/OneDrive/Documents/GitHub/ECSE-425-Computer-Arch/P2/cache_tb.vhd|
+!i113 1
+R12
+R13
+Ememory
+R14
+R2
+R3
+R4
+R0
+Z15 8C:\Users\carlo\OneDrive\Documents\GitHub\ECSE-425-Computer-Arch\P2\memory.vhd
+Z16 FC:\Users\carlo\OneDrive\Documents\GitHub\ECSE-425-Computer-Arch\P2\memory.vhd
+l0
+L6
+V3LP4`=ezmehUVN:f8HSal1
+!s100 TL`MNK5NTn0=f?i`Ph2JS3
+R7
+32
+R8
+!i10b 1
+R9
+Z17 !s90 -reportprogress|300|-work|work|-2002|-explicit|-stats=none|C:\Users\carlo\OneDrive\Documents\GitHub\ECSE-425-Computer-Arch\P2\memory.vhd|
+Z18 !s107 C:\Users\carlo\OneDrive\Documents\GitHub\ECSE-425-Computer-Arch\P2\memory.vhd|
+!i113 1
+R12
+R13
+Artl
+R2
+R3
+R4
+DEx4 work 6 memory 0 22 3LP4`=ezmehUVN:f8HSal1
+l29
+L23
+VRGS>@C^TliVBWJiQY=8il2
+!s100 Fl5=Y6J][VGa6l_6YBKG33
+R7
+32
+R8
+!i10b 1
+R9
+R17
+R18
+!i113 1
+R12
+R13
+Ememory_tb
+R14
+R2
+R3
+R4
+R0
+Z19 8C:/Users/carlo/OneDrive/Documents/GitHub/ECSE-425-Computer-Arch/P2/memory_tb.vhd
+Z20 FC:/Users/carlo/OneDrive/Documents/GitHub/ECSE-425-Computer-Arch/P2/memory_tb.vhd
+l0
+L5
+V_kiS2gc@klE4Vk3RdCF4^2
+!s100 K:h_7;_e46:2;TAj@4dAB3
+R7
+32
+R8
+!i10b 1
+R9
+Z21 !s90 -reportprogress|300|-work|work|-2002|-explicit|-stats=none|C:/Users/carlo/OneDrive/Documents/GitHub/ECSE-425-Computer-Arch/P2/memory_tb.vhd|
+Z22 !s107 C:/Users/carlo/OneDrive/Documents/GitHub/ECSE-425-Computer-Arch/P2/memory_tb.vhd|
+!i113 1
+R12
+R13
+Abehaviour
+R2
+R3
+R4
+DEx4 work 9 memory_tb 0 22 _kiS2gc@klE4Vk3RdCF4^2
+l38
+L8
+VAIIG6V5IXNH>AnecMF_ib3
+!s100 :i96VH_8DL4G91ZkR7MdH1
+R7
+32
+R8
+!i10b 1
+R9
+R21
+R22
+!i113 1
+R12
+R13

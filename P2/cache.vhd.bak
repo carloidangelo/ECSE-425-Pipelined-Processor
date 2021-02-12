@@ -4,7 +4,7 @@ use ieee.numeric_std.all;
 
 entity cache is
 generic(
-	ram_size : INTEGER := 32768
+	ram_size : INTEGER := 32768;
 );
 port(
 	clock : in std_logic;
@@ -40,24 +40,23 @@ signal cache_total: cache;
 begin
 
 -- make circuits here
-fsm: process (clock, reset)
+fsm: process (clk, reset)
 constant word_size: integer := 32;
 variable count: integer := 0;
 variable index: integer := 0;
 variable cache_block: std_logic_vector(135 downto 0);
 variable address_tag: std_logic_vector(5 downto 0);
 variable cache_block_tag: std_logic_vector(5 downto 0);
-variable valid: std_logic := '0';
-variable dirty: std_logic := '0';
+variable valid: std_logic := 0;
+variable dirty: std_logic := 0;
 variable word_offset: integer := 0;
-variable temp_address: std_logic_vector(14 downto 0);
 begin
 	if (reset = '1') then 
 		current_state <= idle;
 		s_waitrequest <= '1';
 		count := 0;
 
-	elsif (rising_edge(clock)) then
+	elsif (rising_edge(clk)) then
 		case current_state is
 			when idle =>
 				index := to_integer(unsigned(s_addr(8 downto 4)));
@@ -71,27 +70,23 @@ begin
 					s_waitrequest <= '0';
 					current_state <= trans_complete;
 				elsif (s_write = '1' and ((address_tag = cache_block_tag) and valid = '1')) then
-					cache_block((((word_offset + 1) * word_size) - 1) downto (word_offset * word_size)) := s_writedata;
-					cache_block(134) := '1';
-					cache_block(135) := '1';
+					 cache_block := (	(((word_offset + 1) * word_size) - 1) downto (word_offset * word_size) => s_writedata,   
+                                    				134 => '1',
+								135 => '1');
 					cache_total(index) <= cache_block;
 					s_waitrequest <= '0';
 					current_state <= trans_complete;
 				elsif ((s_read = '1' or s_write = '1') and not((address_tag = cache_block_tag) and valid = '1')) then
 					m_read <= '1';
-					temp_address(14 downto 4) := s_addr(14 downto 4);
-					temp_address(3 downto 0) := "0000";
-					m_addr <= to_integer(unsigned(temp_address));
+					m_addr <= (	31 downto 4 => s_addr(31 downto 4),   
+                                    			others => '0');
 					current_state <= mem_read;
 				elsif (s_read = '0' and s_write = '0') then
 					current_state <= idle;
 				end if; 
 			when mem_read =>
-				null;
 			when mem_write =>
-				null;
 			when trans_complete => 
-				null;
 			when others =>
 				null;
 		end case;
