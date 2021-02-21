@@ -9,7 +9,7 @@ architecture behavior of cache_tb is
 
 component cache is
 generic(
-    ram_size : INTEGER := 32768;
+    ram_size : INTEGER := 32768
 );
 port(
     clock : in std_logic;
@@ -61,7 +61,7 @@ signal s_write : std_logic;
 signal s_writedata : std_logic_vector (31 downto 0);
 signal s_waitrequest : std_logic;
 
-signal m_addr : integer range 0 to 32768;
+signal m_addr : integer range 0 to 32768 - 1;
 signal m_read : std_logic;
 signal m_readdata : std_logic_vector (7 downto 0);
 signal m_write : std_logic;
@@ -123,15 +123,14 @@ begin
 	-- Test case 1: Cache Hit (Read)
 	REPORT "Test case 1, valid + tag equal + read + not dirty";
 	-- Input: 
-        s_addr <= X"0005"; 
-        s_writedata <= X"0012";
+        s_addr <= X"00000005"; 
+        s_writedata <= X"00000012";
         s_write <= '1';
         wait until rising_edge(s_waitrequest);
         s_write <= '0';
         s_read <= '1';
         wait until rising_edge(s_waitrequest);
-        assert s_readdata = X"0012" report "write unsuccessful" severity error;
-	
+        assert s_readdata = X"00000012" report "write unsuccessful" severity error;
+	wait;
 end process;
-	
 end;
