@@ -35,22 +35,25 @@ type states is (idle,mem_read,mem_write,trans_complete);
 signal current_state : states;
 
 type cache is array(0 to 31) of std_logic_vector(135 downto 0);
-signal cache_total: cache;
+signal cache_total: cache := (others => (others => '0'));
 
 begin
 
 -- make circuits here
 fsm: process (clock, reset)
 constant word_size: integer := 32;
-variable count: integer := 0;
-variable index: integer := 0;
-variable cache_block: std_logic_vector(135 downto 0);
+constant byte_size: integer := 8;
+variable count: integer range 0 to 16;
+variable word_offset: integer range 0 to 3;
+variable index: integer range 0 to 31;
 variable address_tag: std_logic_vector(5 downto 0);
-variable cache_block_tag: std_logic_vector(5 downto 0);
-variable valid: std_logic := '0';
-variable dirty: std_logic := '0';
-variable word_offset: integer := 0;
 variable temp_address: std_logic_vector(14 downto 0);
+variable cache_block: std_logic_vector(135 downto 0);
+variable cache_block_tag: std_logic_vector(5 downto 0);
+variable replace_block: std_logic_vector(135 downto 0) := (others => '0');
+variable valid: std_logic;
+variable dirty: std_logic;
+
 begin
 	if (reset = '1') then 
 		current_state <= idle;
@@ -60,19 +63,18 @@ begin
 	elsif (rising_edge(clock)) then
 		case current_state is
 			when idle =>
+				word_offset := to_integer(unsigned(s_addr(3 downto 2)));
 				index := to_integer(unsigned(s_addr(8 downto 4)));
-				cache_block := cache_total(index);
 				address_tag := s_addr(14 downto 9);
+				cache_block := cache_total(index);
 				cache_block_tag := cache_block(133 downto 128);
 				valid := cache_block(134);
-				word_offset := to_integer(unsigned(s_addr(3 downto 2)));
 				if (s_read = '1' and (address_tag = cache_block_tag) and valid = '1') then
 					s_readdata <= cache_block((((word_offset + 1) * word_size) - 1) downto (word_offset * word_size));
 					s_waitrequest <= '0';
 					current_state <= trans_complete;
-				elsif (s_write = '1' and ((address_tag = cache_block_tag) and valid = '1')) then
+				elsif (s_write = '1' and (address_tag = cache_block_tag) and valid = '1') then
 					cache_block((((word_offset + 1) * word_size) - 1) downto (word_offset * word_size)) := s_writedata;
-					cache_block(134) := '1';
 					cache_block(135) := '1';
 					cache_total(index) <= cache_block;
 					s_waitrequest <= '0';
@@ -87,7 +89,34 @@ begin
 					current_state <= idle;
 				end if; 
 			when mem_read =>
-				null;
+				dirty := cache_block(135);
+				if (m_waitrequest = '1') then
+					current_state <= mem_read;
+				elsif (m_waitrequest = '0' and count < 16) then
+					replace_block((((count + 1) * byte_size) - 1) downto (count * byte_size) := m_readdata;
+					count := count + 1;
+					m_addr <= std_logic_vector(unsigned(m_addr) + 1);
+					current_state <= mem_read;
+				elsif (m_waitrequest = '0' and count = 16 and dirty = '0') then
+					replace_block(134) := '1';
+					replace_block(133 downto 128):= s_addr(14 downto 9);
+					if (s_read = '1') then
+						cache_total(index):= replace_block;
+						s_readdata <= replace_block((((word_offset + 1) * word_size) - 1) downto (word_offset * word_size));
+					elsif (s_write = '1') then
+						replace_block((((word_offset + 1) * word_size) - 1) downto (word_offset * word_size)) := s_writedata;
+						replace_block(135) := '1';
+						cache_total(index) <= replace_block;
+					end if;
+					m_read <= '0';
+					s_waitrequest <= '0';
+					count := 0;
+					current_state <= trans_complete;
+				elsif (m_waitrequest = '0' and count = 16 and dirty = '1') then
+					m_read <= '0';
+					count := 0;
+					current_state <= mem_write;
+				end if;
 			when mem_write =>
 				null;
 			when trans_complete => 
