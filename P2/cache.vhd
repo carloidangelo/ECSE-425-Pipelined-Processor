@@ -93,15 +93,15 @@ begin
 				if (m_waitrequest = '1') then
 					current_state <= mem_read;
 				elsif (m_waitrequest = '0' and count < 16) then
-					replace_block((((count + 1) * byte_size) - 1) downto (count * byte_size) := m_readdata;
+					replace_block((((count + 1) * byte_size) - 1) downto (count * byte_size)) := m_readdata;
 					count := count + 1;
-					m_addr <= std_logic_vector(unsigned(m_addr) + 1);
+					m_addr <= to_integer(unsigned(temp_address)) + count;
 					current_state <= mem_read;
 				elsif (m_waitrequest = '0' and count = 16 and dirty = '0') then
 					replace_block(134) := '1';
 					replace_block(133 downto 128):= s_addr(14 downto 9);
 					if (s_read = '1') then
-						cache_total(index):= replace_block;
+						cache_total(index) <= replace_block;
 						s_readdata <= replace_block((((word_offset + 1) * word_size) - 1) downto (word_offset * word_size));
 					elsif (s_write = '1') then
 						replace_block((((word_offset + 1) * word_size) - 1) downto (word_offset * word_size)) := s_writedata;
@@ -115,12 +115,36 @@ begin
 				elsif (m_waitrequest = '0' and count = 16 and dirty = '1') then
 					m_read <= '0';
 					count := 0;
+					m_write <= '1';
+					m_writedata <= cache_block((((count + 1) * byte_size) - 1) downto (count * byte_size));
 					current_state <= mem_write;
 				end if;
 			when mem_write =>
-				null;
+				if (m_waitrequest = '1') then
+					current_state <= mem_write;
+				elsif (m_waitrequest = '0' and count < 16) then
+					count := count + 1;
+					m_writedata <= cache_block((((count + 1) * byte_size) - 1) downto (count * byte_size));
+					current_state <= mem_write;
+				elsif (m_waitrequest = '0' and count = 16) then
+					replace_block(134) := '1';
+					replace_block(133 downto 128):= s_addr(14 downto 9);
+					if (s_read = '1') then
+						cache_total(index) <= replace_block;
+						s_readdata <= replace_block((((word_offset + 1) * word_size) - 1) downto (word_offset * word_size));
+					elsif (s_write = '1') then
+						replace_block((((word_offset + 1) * word_size) - 1) downto (word_offset * word_size)) := s_writedata;
+						replace_block(135) := '1';
+						cache_total(index) <= replace_block;
+					end if;
+					m_write <= '0';
+					s_waitrequest <= '0';
+					count := 0;
+					current_state <= trans_complete;
+				end if;
 			when trans_complete => 
-				null;
+				s_waitrequest <= '1';
+				current_state <= idle;
 			when others =>
 				null;
 		end case;
