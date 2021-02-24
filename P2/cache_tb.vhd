@@ -114,23 +114,57 @@ end process;
 
 test_process : process
 begin
-	REPORT "Initialization (setting current state to idle)";
+	report "Initialization (setting current state to idle)";
 	reset <= '1';
-	WAIT FOR 1 * clk_period;
+	s_write <= '0';
+	s_read <= '0';
+	wait for 1 * clk_period;
 	reset <= '0';
-	WAIT FOR 1 * clk_period;
+	wait for 1 * clk_period;
 
-	-- Test case 1: Cache Hit (Read)
-	REPORT "Test case 1, valid + tag equal + read + not dirty";
-	-- Input: 
-        s_addr <= X"00000005"; 
-        s_writedata <= X"00000012";
-        s_write <= '1';
+	-- Test case 1: Cache Miss (Read)
+	report "Test case 1, invalid + not dirty + read + tag equal";
+        s_addr <= x"00000000"; 
+        s_read <= '1';
+	wait for 2 * clk_period;
+	assert m_addr = 0 report "no read miss" severity error;
+	assert m_read = '1' report "no read miss" severity error;
         wait until rising_edge(s_waitrequest);
-        s_write <= '0';
+	assert s_readdata = x"03020100" report "read data is wrong" severity error;
+	s_read <= '0';
+        wait for clk_period;
+
+	-- Test case 2: Cache Hit (Read)
+	report "Test case 2, valid + not dirty + read + tag equal";
+        s_addr <= x"00000000"; 
         s_read <= '1';
         wait until rising_edge(s_waitrequest);
-        assert s_readdata = X"00000012" report "write unsuccessful" severity error;
+	assert s_readdata = x"03020100" report "read data is wrong" severity error;
+	s_read <= '0';
+        wait for clk_period;
+
+	-- Test case 3: Cache Hit (Write)
+	report "Test case 3, valid + not dirty + write + tag equal";
+        s_addr <= x"00000000"; 
+	s_writedata <= x"15151515";
+        s_write <= '1';
+        wait until rising_edge(s_waitrequest);
+	s_write <= '0';
+	s_read <= '1';
+	wait until rising_edge(s_waitrequest);
+	assert s_readdata = x"15151515" report "write did not work" severity error;
+	s_read <= '0';
+        wait for clk_period;
+
+	-- Test case 4: Cache Hit (Read)
+	report "Test case 4, valid + dirty + read + tag equal";
+        s_addr <= x"00000000"; 
+        s_read <= '1';
+        wait until rising_edge(s_waitrequest);
+	assert s_readdata = x"15151515" report "read data is wrong" severity error;
+	s_read <= '0';
+        wait for clk_period;
+
 	wait;
 end process;
 end;
