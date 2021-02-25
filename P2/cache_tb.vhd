@@ -123,19 +123,7 @@ begin
 	wait for 1 * clk_period;
 
 	-- Test case 1: Cache Miss (Read)
-	report "Test case 1, invalid + not dirty + read + tag equal";
-        s_addr <= x"00000000"; 
-        s_read <= '1';
-	wait for 2 * clk_period;
-	assert m_addr = 0 report "no read miss" severity error;
-	assert m_read = '1' report "no read miss" severity error;
-        wait until rising_edge(s_waitrequest);
-	assert s_readdata = x"03020100" report "read data is wrong" severity error;
-	s_read <= '0';
-        wait for clk_period;
-
-	-- Test case 2: Cache Hit (Read)
-	report "Test case 2, valid + not dirty + read + tag equal";
+	report "Test case 1, invalid + not dirty + read + tag equal"; -- tags are equal because cache is initialized with entries containing only zeroes
         s_addr <= x"00000000"; 
         s_read <= '1';
         wait until rising_edge(s_waitrequest);
@@ -143,8 +131,35 @@ begin
 	s_read <= '0';
         wait for clk_period;
 
-	-- Test case 3: Cache Hit (Write)
-	report "Test case 3, valid + not dirty + write + tag equal";
+	-- Test case 2: Cache Miss (Read)
+	report "Test case 2, invalid + not dirty + read + tag not equal";
+        s_addr <= x"00001010"; 
+        s_read <= '1';
+        wait until rising_edge(s_waitrequest);
+	assert s_readdata = x"13121110" report "read data is wrong" severity error;
+	s_read <= '0';
+        wait for clk_period;
+
+	-- Test case 3: Cache Miss (Read)
+	report "Test case 3, valid + not dirty + read + tag not equal";
+        s_addr <= x"00002010"; 
+        s_read <= '1';
+        wait until rising_edge(s_waitrequest);
+	assert s_readdata = x"13121110" report "read data is wrong" severity error;
+	s_read <= '0';
+        wait for clk_period;
+
+	-- Test case 4: Cache Hit (Read)
+	report "Test case 4, valid + not dirty + read + tag equal";
+        s_addr <= x"00000000"; 
+        s_read <= '1';
+        wait until rising_edge(s_waitrequest);
+	assert s_readdata = x"03020100" report "read data is wrong" severity error;
+	s_read <= '0';
+        wait for clk_period;
+
+	-- Test case 5: Cache Hit (Write)
+	report "Test case 5, valid + not dirty + write + tag equal";
         s_addr <= x"00000000"; 
 	s_writedata <= x"15151515";
         s_write <= '1';
@@ -156,12 +171,86 @@ begin
 	s_read <= '0';
         wait for clk_period;
 
-	-- Test case 4: Cache Hit (Read)
-	report "Test case 4, valid + dirty + read + tag equal";
+	-- Test case 6: Cache Hit (Read)
+	report "Test case 6, valid + dirty + read + tag equal";
         s_addr <= x"00000000"; 
         s_read <= '1';
         wait until rising_edge(s_waitrequest);
 	assert s_readdata = x"15151515" report "read data is wrong" severity error;
+	s_read <= '0';
+        wait for clk_period;
+
+	-- Test case 7: Cache Hit (Write)
+	report "Test case 7, valid + dirty + write + tag equal";
+        s_addr <= x"00000000"; 
+	s_writedata <= x"28282828";
+        s_write <= '1';
+        wait until rising_edge(s_waitrequest);
+	s_write <= '0';
+	s_read <= '1';
+	wait until rising_edge(s_waitrequest);
+	assert s_readdata = x"28282828" report "write did not work" severity error;
+	s_read <= '0';
+        wait for clk_period;
+
+	-- Test case 8: Cache Miss (Write)
+	report "Test case 8, valid + dirty + write + tag not equal";
+        s_addr <= x"00001000"; 
+	s_writedata <= x"15151515";
+        s_write <= '1';
+        wait until rising_edge(s_waitrequest);
+	s_write <= '0';
+	s_read <= '1';
+	wait until rising_edge(s_waitrequest);
+	assert s_readdata = x"15151515" report "write did not work" severity error;
+	s_read <= '0';
+        wait for clk_period;
+	
+	-- Test case 9: Cache Miss (Read)
+	report "Test case 9, valid + dirty + read + tag not equal";
+        s_addr <= x"00000000"; 
+        s_read <= '1';
+        wait until rising_edge(s_waitrequest);
+	assert s_readdata = x"28282828" report "read data is wrong" severity error;
+	s_read <= '0';
+        wait for clk_period;
+
+	-- Test case 10: Cache Miss (Write)
+	report "Test case 10, valid + not dirty + write + tag not equal";
+        s_addr <= x"00001010"; 
+	s_writedata <= x"15151515";
+        s_write <= '1';
+        wait until rising_edge(s_waitrequest);
+	s_write <= '0';
+	s_read <= '1';
+	wait until rising_edge(s_waitrequest);
+	assert s_readdata = x"15151515" report "write did not work" severity error;
+	s_read <= '0';
+        wait for clk_period;
+
+	-- Test case 11: Cache Miss (Write)
+	report "Test case 11, invalid + not dirty + write + tag equal"; -- tags are equal because cache is initialized with entries containing only zeroes
+        s_addr <= x"00000020"; 
+	s_writedata <= x"11111111";
+        s_write <= '1';
+        wait until rising_edge(s_waitrequest);
+	s_write <= '0';
+	s_read <= '1';
+	wait until rising_edge(s_waitrequest);
+	assert s_readdata = x"11111111" report "write did not work" severity error;
+	s_read <= '0';
+        wait for clk_period;
+
+	-- Test case 12: Cache Miss (Write)
+	report "Test case 12, invalid + not dirty + write + tag not equal";
+        s_addr <= x"00001030"; 
+	s_writedata <= x"11111111";
+        s_write <= '1';
+        wait until rising_edge(s_waitrequest);
+	s_write <= '0';
+	s_read <= '1';
+	wait until rising_edge(s_waitrequest);
+	assert s_readdata = x"11111111" report "write did not work" severity error;
 	s_read <= '0';
         wait for clk_period;
 

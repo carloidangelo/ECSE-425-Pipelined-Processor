@@ -112,6 +112,8 @@ begin
 						end if;
 						if (dirty = '1') then 
 							count := 0;
+							temp_address(14 downto 9) := cache_block_tag;
+							temp_address(8 downto 4) := s_addr(8 downto 4);
 							current_state <= mem_write;
 						else
 							count := 0;
@@ -126,6 +128,9 @@ begin
 			when mem_write =>
 				if (m_waitrequest = '1') then
 					m_write <= '1';
+					temp_count := std_logic_vector(to_unsigned(count, 5));
+					temp_address(3 downto 0) := temp_count(3 downto 0);
+					m_addr <= to_integer(unsigned(temp_address));
 					m_writedata <= cache_block((((count + 1) * byte_size) - 1) downto (count * byte_size));
 					current_state <= mem_write;
 				elsif (m_waitrequest = '0') then
