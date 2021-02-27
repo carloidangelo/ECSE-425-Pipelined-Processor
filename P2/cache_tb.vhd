@@ -123,13 +123,21 @@ begin
 	wait for 1 * clk_period;
 
 	-- Test case 1: Cache Miss (Read)
-	report "Test case 1, invalid + not dirty + read + tag equal"; -- tags are equal because cache is initialized with entries containing only zeroes
+	report "Test case 1, invalid + not dirty + read + tag equal"; 
         s_addr <= x"00000000"; 
         s_read <= '1';
         wait until rising_edge(s_waitrequest);
 	assert s_readdata = x"03020100" report "read data is wrong" severity error;
 	s_read <= '0';
         wait for clk_period;
+	-- The address tells us that the tag of the desired block is "000000" and that its index in the cache is 0. 
+	-- The current cache block at index 0 is invalid. 
+	-- The current cache block at index 0 is not dirty. 
+	-- The current cache block at index 0 will have tag equal because the cache is initialized with entries containing only zeroes.
+	-- The cache will access main memory and replace this block.
+	-- The new cache block at index 0 is valid. 
+	-- The new cache block at index 0 is not dirty. 
+	-- The new cache block at index 0 will have a tag of "000000".
 
 	-- Test case 2: Cache Miss (Read)
 	report "Test case 2, invalid + not dirty + read + tag not equal";
@@ -139,6 +147,14 @@ begin
 	assert s_readdata = x"13121110" report "read data is wrong" severity error;
 	s_read <= '0';
         wait for clk_period;
+	-- The address tells us that the tag of the desired block is "001000" and that its index in the cache is 1. 
+	-- The current cache block at index 1 is invalid. 
+	-- The current cache block at index 1 is not dirty.
+	-- The current cache block at index 1 will have tag not equal.
+	-- The cache will access main memory and replace this block.
+	-- The new cache block at index 1 is valid. 
+	-- The new cache block at index 1 is not dirty. 
+	-- The new cache block at index 1 will have a tag of "001000".
 
 	-- Test case 3: Cache Miss (Read)
 	report "Test case 3, valid + not dirty + read + tag not equal";
@@ -148,6 +164,14 @@ begin
 	assert s_readdata = x"13121110" report "read data is wrong" severity error;
 	s_read <= '0';
         wait for clk_period;
+	-- The address tells us that the tag of the desired block is "010000" and that its index in the cache is 1. 
+	-- The current cache block at index 1 is valid. 
+	-- The current cache block at index 1 is not dirty.
+	-- The current cache block at index 1 will have tag not equal.
+	-- The cache will access main memory and replace this block.
+	-- The new cache block at index 1 is valid. 
+	-- The new cache block at index 1 is not dirty. 
+	-- The new cache block at index 1 will have a tag of "010000".
 
 	-- Test case 4: Cache Hit (Read)
 	report "Test case 4, valid + not dirty + read + tag equal";
@@ -157,6 +181,11 @@ begin
 	assert s_readdata = x"03020100" report "read data is wrong" severity error;
 	s_read <= '0';
         wait for clk_period;
+	-- The address tells us that the tag of the desired block is "000000" and that its index in the cache is 0. 
+	-- The current cache block at index 0 is valid. 
+	-- The current cache block at index 0 is not dirty. 
+	-- The current cache block at index 0 will have tag equal.
+	-- This cache block will remain in the cache.
 
 	-- Test case 5: Cache Hit (Write)
 	report "Test case 5, valid + not dirty + write + tag equal";
@@ -170,6 +199,11 @@ begin
 	assert s_readdata = x"15151515" report "write did not work" severity error;
 	s_read <= '0';
         wait for clk_period;
+	-- The address tells us that the tag of the desired block is "000000" and that its index in the cache is 0. 
+	-- The current cache block at index 0 is valid. 
+	-- The current cache block at index 0 is not dirty. 
+	-- The current cache block at index 0 will have tag equal.
+	-- New data will be written to the cache block and its dirty bit will be set to '1'.
 
 	-- Test case 6: Cache Hit (Read)
 	report "Test case 6, valid + dirty + read + tag equal";
@@ -179,6 +213,11 @@ begin
 	assert s_readdata = x"15151515" report "read data is wrong" severity error;
 	s_read <= '0';
         wait for clk_period;
+	-- The address tells us that the tag of the desired block is "000000" and that its index in the cache is 0. 
+	-- The current cache block at index 0 is valid. 
+	-- The current cache block at index 0 is dirty. 
+	-- The current cache block at index 0 will have tag equal.
+	-- This cache block will remain in the cache.
 
 	-- Test case 7: Cache Hit (Write)
 	report "Test case 7, valid + dirty + write + tag equal";
@@ -192,6 +231,11 @@ begin
 	assert s_readdata = x"28282828" report "write did not work" severity error;
 	s_read <= '0';
         wait for clk_period;
+	-- The address tells us that the tag of the desired block is "000000" and that its index in the cache is 0. 
+	-- The current cache block at index 0 is valid. 
+	-- The current cache block at index 0 is dirty. 
+	-- The current cache block at index 0 will have tag equal.
+	-- New data will be written to the cache block.
 
 	-- Test case 8: Cache Miss (Write)
 	report "Test case 8, valid + dirty + write + tag not equal";
@@ -205,7 +249,16 @@ begin
 	assert s_readdata = x"15151515" report "write did not work" severity error;
 	s_read <= '0';
         wait for clk_period;
-	
+	-- The address tells us that the tag of the desired block is "001000" and that its index in the cache is 0. 
+	-- The current cache block at index 0 is valid. 
+	-- The current cache block at index 0 is dirty. 
+	-- The current cache block at index 0 will have tag not equal.
+	-- The cache will access main memory and replace this block
+	-- New data will be written to the new cache block.
+	-- The new cache block at index 0 is valid. 
+	-- The new cache block at index 0 is dirty. 
+	-- The new cache block at index 0 will have a tag of "001000".
+
 	-- Test case 9: Cache Miss (Read)
 	report "Test case 9, valid + dirty + read + tag not equal";
         s_addr <= x"00000000"; 
@@ -214,6 +267,14 @@ begin
 	assert s_readdata = x"28282828" report "read data is wrong" severity error;
 	s_read <= '0';
         wait for clk_period;
+	-- The address tells us that the tag of the desired block is "000000" and that its index in the cache is 0. 
+	-- The current cache block at index 0 is valid. 
+	-- The current cache block at index 0 is dirty. 
+	-- The current cache block at index 0 will have tag not equal.
+	-- The cache will access main memory and replace this block.
+	-- The new cache block at index 0 is valid. 
+	-- The new cache block at index 0 is not dirty. 
+	-- The new cache block at index 0 will have a tag of "000000".
 
 	-- Test case 10: Cache Miss (Write)
 	report "Test case 10, valid + not dirty + write + tag not equal";
@@ -227,9 +288,18 @@ begin
 	assert s_readdata = x"15151515" report "write did not work" severity error;
 	s_read <= '0';
         wait for clk_period;
+	-- The address tells us that the tag of the desired block is "001000" and that its index in the cache is 1. 
+	-- The current cache block at index 1 is valid. 
+	-- The current cache block at index 1 is not dirty. 
+	-- The current cache block at index 1 will have tag not equal.
+	-- The cache will access main memory and replace this block
+	-- New data will be written to the new cache block.
+	-- The new cache block at index 1 is valid. 
+	-- The new cache block at index 1 is dirty. 
+	-- The new cache block at index 1 will have a tag of "001000".
 
 	-- Test case 11: Cache Miss (Write)
-	report "Test case 11, invalid + not dirty + write + tag equal"; -- tags are equal because cache is initialized with entries containing only zeroes
+	report "Test case 11, invalid + not dirty + write + tag equal"; 
         s_addr <= x"00000020"; 
 	s_writedata <= x"11111111";
         s_write <= '1';
@@ -240,6 +310,15 @@ begin
 	assert s_readdata = x"11111111" report "write did not work" severity error;
 	s_read <= '0';
         wait for clk_period;
+	-- The address tells us that the tag of the desired block is "000000" and that its index in the cache is 2. 
+	-- The current cache block at index 2 is invalid. 
+	-- The current cache block at index 2 is not dirty. 
+	-- The current cache block at index 2 will have tag equal because the cache is initialized with entries containing only zeroes.
+	-- The cache will access main memory and replace this block.
+	-- New data will be written to the new cache block.
+	-- The new cache block at index 2 is valid. 
+	-- The new cache block at index 2 is dirty. 
+	-- The new cache block at index 2 will have a tag of "000000".
 
 	-- Test case 12: Cache Miss (Write)
 	report "Test case 12, invalid + not dirty + write + tag not equal";
@@ -253,6 +332,15 @@ begin
 	assert s_readdata = x"11111111" report "write did not work" severity error;
 	s_read <= '0';
         wait for clk_period;
+	-- The address tells us that the tag of the desired block is "001000" and that its index in the cache is 3. 
+	-- The current cache block at index 3 is invalid. 
+	-- The current cache block at index 3 is not dirty. 
+	-- The current cache block at index 3 will have tag not equal.
+	-- The cache will access main memory and replace this block.
+	-- New data will be written to the new cache block.
+	-- The new cache block at index 3 is valid. 
+	-- The new cache block at index 3 is dirty. 
+	-- The new cache block at index 3 will have a tag of "001000".
 
 	wait;
 end process;
