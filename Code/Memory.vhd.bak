@@ -11,11 +11,12 @@ entity Memory is
 		clock: in std_logic;
 		i_waitrequest : out std_logic := '1';
 		f_waitrequest : in std_logic;
-		address : in integer range 0 to data_mem_size-1;
+		alu_result : in std_logic_vector (31 downto 0);
 		writedata : in std_logic_vector (31 downto 0);
 		readdata : out std_logic_vector (31 downto 0);
 		alu_opcode : in std_logic_vector (4 downto 0);
-		status : out std_logic := '0';
+		status : out std_logic := '0';	
+		alu_result_delay : out std_logic_vector (31 downto 0);
  
 		m_addr : out integer range 0 to data_mem_size-1;
 		m_read : out std_logic := '0';
@@ -40,14 +41,17 @@ begin
 						--write
 						if (alu_opcode = "10111") then 
 							status <= '1';
-							m_addr <= address;
+							m_addr <= to_integer(unsigned(alu_result)(14 downto 0));
 							m_write <= '1';
 							current_state <= operating;
 						--read
 						elsif (alu_opcode = "10101") then 
 							status <= '1';
-							m_addr <= address;
+							m_addr <= to_integer(unsigned(alu_result)(14 downto 0));
 							m_read <= '1';
+							current_state <= operating;
+						else 
+							alu_result_delay <= alu_result;
 							current_state <= operating;
 						END IF;
 					elsif (m_waitrequest = '0') then
@@ -59,7 +63,7 @@ begin
 					end if;
 				when reset =>
 					-- synchronize with other memory unit, so pipeline order is preserved
-					if (f_waitrequest = '0')
+					if (f_waitrequest = '0') then
 						i_waitrequest <= '1';
 						current_state <= operating;
 					else
