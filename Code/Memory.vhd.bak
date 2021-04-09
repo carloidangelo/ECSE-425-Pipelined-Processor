@@ -59,7 +59,7 @@ begin
 					end if;
 				when reset =>
 					-- synchronize with other memory unit, so pipeline order is preserved
-					if (f_waitrequest = '0') then
+					if (f_waitrequest = '0')
 						i_waitrequest <= '1';
 						current_state <= operating;
 					else
