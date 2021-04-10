@@ -6,34 +6,69 @@ use ieee.numeric_std.all;
 
 entity Decode is
 	generic(
-		instr_mem_size : integer := 4096
+		instr_mem_size : integer := 4096;
+		reg_size : INTEGER := 32 --reg size = 2^5 addressing depth
 	);
 	port( 
 		clock: in std_logic;
 		instruction: in std_logic_vector (31 downto 0);
 		pc_updated : in integer range 0 to instr_mem_size-1;
 		pc_updated_delay : out integer range 0 to instr_mem_size-1;
-		read_data1 : out std_logic_vector(31 downto 0) ; 
-		read_data2 : out std_logic_vector(31 downto 0) ; 
+		read_data1 : out std_logic_vector(31 downto 0); 
+		read_data2 : out std_logic_vector(31 downto 0); 
 		extended_immediate : out std_logic_vector (31 downto 0); -- extended immediate value
-		alu_opcode : out std_logic_vector (4 downto 0) -- operation code for ALU
-		--need to include register addresses write and write data
+		alu_opcode : out std_logic_vector (4 downto 0); -- operation code for ALU
+		
+		reg_write: in std_logic; -- register write enable signal
+		write_address: in INTEGER RANGE 0 TO reg_size -1; --address to write to register
+		write_data: in std_logic_vector(31 downto 0); --data to write at register address
+		rd_address: out INTEGER RANGE 0 TO reg_size -1 -- destination register address	
 		);
 end Decode;
 	
 architecture decode_behavior of Decode is
 
 signal extend_immediate: std_logic_vector(31 downto 0);
-signal zero_extend:  std_logic_vector(15 downto 0) := (others => '0');
+signal zero_extend:  std_logic_vector(15 downto 0) := (others => '0'); --zero extend 16b
 signal opcode : std_logic_vector(5 downto 0);
-signal rs : std_logic_vector(4 downto 0);
-signal rt : std_logic_vector(4 downto 0);
-signal rd : std_logic_vector(4 downto 0);
+signal rs : INTEGER RANGE 0 TO reg_size -1; 
+signal rt : INTEGER RANGE 0 TO reg_size -1; 
+signal rd : INTEGER RANGE 0 TO reg_size -1; 
 signal shamt : std_logic_vector(4 downto 0);
 signal funct : std_logic_vector(5 downto 0);
-signal address: std_logic_vector(25 downto 0);
+---jtypes have address bits, currently not sure what to do with address
+signal j_address: std_logic_vector(25 downto 0); 
+signal read_data1_signal: std_logic_vector(31 downto 0);
+signal read_data2_signal: std_logic_vector(31 downto 0);
+
+------- register block component
+component RegisterBlock is 
+	port(
+		clk : in std_logic;
+		reg_write: in std_logic; -- register write enable signal
+		write_data: in std_logic_vector(31 downto 0);
+		write_address: in INTEGER RANGE 0 TO reg_size-1;
+		read_address1 : in INTEGER RANGE 0 TO reg_size -1; -- rs (src address 1)
+		read_address2 : in INTEGER RANGE 0 TO reg_size -1; -- rt (src address 2)
+		data_out1 : out std_logic_vector (31 downto 0); -- rs (data at src 1)
+		data_out2 : out std_logic_vector (31 downto 0) -- rt (data at src 2)
+	);
+end component;
+
 
 begin	
+
+reg: RegisterBlock port map (
+						clk => clock,
+						reg_write => reg_write, -- register write enable signal
+						write_data => write_data,
+						write_address => write_address,
+						read_address1 => rs, -- rs (src address 1)
+						read_address2 => rt, -- rt (src address 2)
+						data_out1 => read_data1_signal, -- rs (data at src 1)
+						data_out2 => read_data2_signal -- rt (data at src 2)
+						);
+
 decoding: process(clock)	
 begin
 		if(rising_edge(clock)) then
@@ -41,9 +76,9 @@ begin
 			opcode <= instruction(31 downto 26);	
 			if opcode = "000000" then --Rtype
 			--NB: Instruction is in descending order
-				rs <= instruction(25 downto 21);
-				rt <= instruction(20 downto 16);
-				rd <= instruction(15 downto 11);
+				rs <= to_integer(unsigned(instruction(25 downto 21)));
+				rt <= to_integer(unsigned(instruction(20 downto 16)));
+				rd <= to_integer(unsigned(instruction(15 downto 11)));
 				shamt <= instruction(10 downto 6);
 				funct <= instruction(5 downto 0);	
 				case(funct) is
@@ -106,6 +141,7 @@ begin
 				alu_opcode <= "10000";       
 
 			else -- Itype
+				rd <= to_integer(unsigned(instruction(16 to 20))); --rd = rt for Itype
 				case(opcode) is
 					 when "001000" =>
 						  -- addi
@@ -151,9 +187,12 @@ begin
 			end if;
 		end if;
 	end process;
+	
+	--set the respective signals
 	extended_immediate <= extend_immediate;
-	--find a way to load data from register to be passed to ALU
-
+	read_data1 <= read_data1_signal;
+	read_data2 <= read_data2_signal;
+	rd_address <= rd;
 end decode_behavior;
 	
 	
