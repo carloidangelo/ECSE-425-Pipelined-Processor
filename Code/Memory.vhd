@@ -32,7 +32,7 @@ architecture behaviour of Memory is
 	signal current_state : states := operating;
 begin
 
-	fetching: process (clock)
+	execute: process (clock)
 	begin
 		if (rising_edge(clock)) then
 			case current_state is
@@ -65,6 +65,7 @@ begin
 					-- synchronize with other memory unit, so pipeline order is preserved
 					if (f_waitrequest = '0') then
 						i_waitrequest <= '1';
+						status <= '0';
 						current_state <= operating;
 					else
 						i_waitrequest <= '0';

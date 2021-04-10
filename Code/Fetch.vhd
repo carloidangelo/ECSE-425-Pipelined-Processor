@@ -19,7 +19,10 @@ entity Fetch is
 		m_addr : out integer range 0 to instr_mem_size-1;
 		m_read : out std_logic := '0';
 		m_readdata : in std_logic_vector (31 downto 0);
-		m_waitrequest : in std_logic
+		m_waitrequest : in std_logic;
+
+		mem_status : in std_logic;
+		d_waitrequest : in std_logic
 	);
 end Fetch;
 
@@ -51,20 +54,18 @@ begin
 						current_state <= reset;
 					end if;
 				when reset =>
-					-- synchronize with other memory unit, so pipeline order is preserved
-					-- FUTURE IMPLEMENTATION
-					-- if (data memory is being used)
-						-- if (d_waitrequest = '0')
-							-- i_waitrequest <= '1';
-							-- current_state <= operating;
-						-- else
-							-- i_waitrequest <= '0';
-							-- current_state <= reset;
-					-- else
-						-- i_waitrequest <= '1';
-						-- current_state <= operating;
-					i_waitrequest <= '1';
-					current_state <= operating;
+					if (mem_status = '1') then
+						if (d_waitrequest = '0') then
+							i_waitrequest <= '1';
+							current_state <= operating;
+						else
+							i_waitrequest <= '0';
+							current_state <= reset;
+						end if;
+					else
+						i_waitrequest <= '1';
+						current_state <= operating;
+					end if;
 				when others =>
 					null;
 			end case;
