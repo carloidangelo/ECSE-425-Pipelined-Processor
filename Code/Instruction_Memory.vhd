@@ -26,11 +26,10 @@ ARCHITECTURE behaviour OF Instruction_Memory IS
 	SIGNAL ram_instr: MEM;
 	SIGNAL fetch_instr: STD_LOGIC_VECTOR(31 DOWNTO 0);
 	SIGNAL read_waitreq_reg: STD_LOGIC := '1';
-	
+	file read_file : text;
 BEGIN
 	--This is the main section of the SRAM model
 	mem_process: PROCESS (clock)
-		file read_file : text;
 		variable read_line : line; 				-- will be one line read from input file
 		variable read_instr : std_logic_vector(31 downto 0); 	-- read one instruction from input file
 		variable count : integer range 0 to instr_mem_size-1;
