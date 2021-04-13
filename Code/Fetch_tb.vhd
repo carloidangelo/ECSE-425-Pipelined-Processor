@@ -22,7 +22,10 @@ component Fetch is
 		m_addr : out integer range 0 to instr_mem_size-1;
 		m_read : out std_logic := '0';
 		m_readdata : in std_logic_vector (31 downto 0);
-		m_waitrequest : in std_logic
+		m_waitrequest : in std_logic;
+
+		mem_status : in std_logic;
+		d_waitrequest : in std_logic
 	);
 end component;
 
@@ -54,6 +57,8 @@ signal m_addr : integer range 0 to 4096-1;
 signal m_read : std_logic;
 signal m_readdata : std_logic_vector (31 downto 0);
 signal m_waitrequest : std_logic;
+signal mem_status : std_logic;
+signal d_waitrequest : std_logic;
 
 begin
 
@@ -70,7 +75,9 @@ port map(
 	m_addr => m_addr,
 	m_read => m_read,
 	m_readdata => m_readdata,
-	m_waitrequest => m_waitrequest
+	m_waitrequest => m_waitrequest,
+	mem_status => mem_status,
+	d_waitrequest => d_waitrequest
 );
 
 
@@ -94,6 +101,8 @@ end process;
 
 test_process : process
 begin
+	mem_status <= '1'; -- assume memory stage is being used
+	d_waitrequest <= '0';	-- assume memory stage is finished processing read/write
 
 	-- Test case 1: Fetch instruction pc = 0
 	report "Test case 1";
@@ -102,11 +111,13 @@ begin
         wait until rising_edge(i_waitrequest);
 	assert instr = "00100000000010110000011111010000" report "read unsuccessful" severity error;
 	assert pc_updated = 4 report "update unsuccessful" severity error;
+	
+	mem_status <= '0'; -- assume memory stage is not being used
 
 	-- Test case 2: Fetch instruction pc = 4
 	report "Test case 2";
 	pc_branch <= 16;
-	branch_taken <= '1';
+	branch_taken <= '1'; -- branch taken, so pc = 16 at next fetch
         wait until rising_edge(i_waitrequest);
 	assert instr = "00100000000011110000000000000100" report "read unsuccessful" severity error;
 	assert pc_updated = 8 report "update unsuccessful" severity error;
