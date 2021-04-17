@@ -23,10 +23,6 @@ entity Decode is
 		write_address: in INTEGER RANGE 0 TO reg_size -1; --address to write to register
 		write_data: in std_logic_vector(31 downto 0); --data to write at register address
 		rd_address: out INTEGER RANGE 0 TO reg_size -1 -- destination register address	
-		
-		-- data hazard detections
-		delay: out std_logic;
-		
 		);
 end Decode;
 	
@@ -44,11 +40,6 @@ signal funct : std_logic_vector(5 downto 0);
 signal j_address: std_logic_vector(25 downto 0); 
 signal read_data1_signal: std_logic_vector(31 downto 0);
 signal read_data2_signal: std_logic_vector(31 downto 0);
-
--- data hazard detections
-signal rd_delay1: INTEGER;
-signal rd_delay2: INTEGER;
-signal counter1: INTEGER := 2;
 
 ------- register block component
 component RegisterBlock is 
@@ -79,34 +70,18 @@ reg: RegisterBlock port map (
 						);
 
 decoding: process(clock)	
-
-variable op_temp : std_logic_vector(5 downto 0);
-variable rs_temp : INTEGER RANGE 0 TO reg_size -1; 
-variable rt_temp : INTEGER RANGE 0 TO reg_size -1; 
-variable rd_temp : INTEGER RANGE 0 TO reg_size -1; 
-
-variable funct_temp : std_logic_vector(5 downto 0);
----jtypes have address bits, currently not sure what to do with address
-variable j_address_temp: std_logic_vector(25 downto 0);
-
-
 begin
 		if(rising_edge(clock)) then
 			--all instruction types
-			op_temp := instruction(31 downto 26);	
-			rs_temp := to_integer(unsigned(instruction(25 downto 21)));
-			if op_temp = "000000" then --Rtype
+			opcode <= instruction(31 downto 26);	
+			if opcode = "000000" then --Rtype
 			--NB: Instruction is in descending order
-				rt_temp := to_integer(unsigned(instruction(20 downto 16)));
-				rd_temp := to_integer(unsigned(instruction(15 downto 11)));
+				rs <= to_integer(unsigned(instruction(25 downto 21)));
+				rt <= to_integer(unsigned(instruction(20 downto 16)));
+				rd <= to_integer(unsigned(instruction(15 downto 11)));
 				shamt <= instruction(10 downto 6);
-				funct_temp := instruction(5 downto 0);	
-				
-				
-				rd_delay1 <= rd_temp;
-				rd_delay2 <= rd_delay1;
-				
-				case(funct_temp) is
+				funct <= instruction(5 downto 0);	
+				case(funct) is
 					when "100000" => 
 						-- add
 						alu_opcode <= "00000";
@@ -155,42 +130,19 @@ begin
 					when others =>
 						null;
 				end case;
-				-- stall pipeline for 2 clock cycles
-				if (rs_temp = rd_delay1 or counter1 > 0 or rt_temp = rd_delay1) then
-					rd_temp := 0;
-					rs_temp := 0;
-					alu_opcode <= "00000";
-					delay <= '1';
-					counter1 <= counter1 - 1;
-				else 
-					counter1 <= 2;
-				end if;
-				-- stall pipeline for 1
-				if (rs_temp = rd_delay2 or rt_temp = rd_delay2) then
-					rd_temp = 0;
-					rs_temp = 0;
-					alu_opcode <= "00000";
-					delay <= '1';
-				end if;
-				rs<=rs_temp;
-				rt<=rt_temp;
-				rd<=rd_temp;
 				
-			elsif op_temp = "000010" then -- Jtype
+			elsif opcode = "000010" then -- Jtype
 				-- j
 				address <= instruction(25 downto 0);
 				alu_opcode <= "01111";
-			elsif op_temp = "000011" then -- Jtype
+			elsif opcode = "000011" then -- Jtype
 				-- jal
 				address <= instruction(25 downto 0);
 				alu_opcode <= "10000";       
 
 			else -- Itype
-				rd_temp := to_integer(unsigned(instruction(20 downto 16))); --rd = rt for Itype
-				rd_delay1 <= rd_temp;
-				rd_delay2 <= rd_delay1;
-				
-				case(op_temp) is
+				rd <= to_integer(unsigned(instruction(16 to 20))); --rd = rt for Itype
+				case(opcode) is
 					 when "001000" =>
 						  -- addi
 						  alu_opcode <= "10001";
@@ -232,26 +184,7 @@ begin
 						  extend_immediate <= std_logic_vector(resize(signed(instruction(15 downto 0)), extend_immediate'length));
 					 when others => null;	  
 				end case;
-				-- stall pipeline for 2 clock cycles
-				if (rs_temp = rd_delay1 or counter1 > 0) then
-					rd_temp := 0;
-					rs_temp := 0;
-					alu_opcode <= "00000"; --add instruction
-					delay <= '1';
-					counter1 <= counter1 - 1;
-				else 
-					counter1 <= 2;
-				end if;
-				-- stall pipeline for 1 clock cycle
-				if (rs_temp = rd_delay2) then
-					rd_temp = 0;
-					rs_temp = 0; 
-					alu_opcode <= "00000"; --add instruction
-					delay <= '1';
-				end if;
-				rs<=rs_temp;	
-				rd<=rd_temp;
-			end if; 
+			end if;
 		end if;
 	end process;
 	
