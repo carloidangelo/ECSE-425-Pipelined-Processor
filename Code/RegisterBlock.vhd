@@ -10,6 +10,8 @@ entity RegisterBlock is
 		);
   port (
 	clock : in std_logic;
+	f_waitrequest: in std_logic;
+	d_waitrequest: in std_logic;
 	reg_write: in std_logic; -- register write enable signal
 	write_data: in std_logic_vector(31 downto 0);
 	write_address: in INTEGER RANGE 0 TO reg_size-1;
@@ -17,6 +19,7 @@ entity RegisterBlock is
 	read_address2 : in INTEGER RANGE 0 TO reg_size -1; -- rt (src address 2)
 	data_out1 : out std_logic_vector (31 downto 0); -- rs (data at src 1)
 	data_out2 : out std_logic_vector (31 downto 0) -- rt (data at src 2)
+	FILE write_file : TEXT;
     ) ;
 end entity;
   
@@ -27,31 +30,25 @@ architecture behavior of RegisterBlock is
   begin
   --This is the main section of the SRAM model
 	register_process: PROCESS (clock)
-		file read_file : text;
-		variable read_line : line; 				-- will be one line read from input file
-		variable read_instr : std_logic_vector(31 downto 0); 	-- read one instruction from input file
-		variable count : integer range 0 to instr_mem_size-1;
-	BEGIN
-		--This is a cheap trick to initialize the SRAM in simulation
-		IF(now < 1 ps)THEN
-			file_open(read_file, "register_file.txt", read_mode);
-			while not endfile(read_file) loop
-				readline(read_file, read_line);
-				read(read_line, read_instr); 
-				ram_instr(count) <= read_instr(7 downto 0);
-				ram_instr(count + 1) <= read_instr(15 downto 8);
-				ram_instr(count + 2) <= read_instr(23 downto 16);
-				ram_instr(count + 3) <= read_instr(31 downto 24);
-				count := count + 4;
-			end loop;
-			file_close(read_file);
-		end if;
-
-	register_process: process(clk)
-	begin
-	if rising_edge(clock) then
+		variable write_line : line; -- variable to holds data memory
+		variable write_data : std_logic_vector(31 downto 0); 	-- get data from RAM block
 	
-		if reg_write = '1' and write_address /=0 then --R0 is always zero
+	begin
+	IF(now > 9999999 ps)THEN
+			file_open(write_file, "register_file.txt", write_mode);
+			For i in 0 to ram_size-1 LOOP
+				write_data(7 downto 0) := ram_block(i);
+				write_data(15 downto 8) := ram_block(i + 1);
+				write_data(23 downto 16) := ram_block(i + 2);
+				write_data(31 downto 24) := ram_block(i + 3);
+				write(write_line, write_data);
+				writeline(write_file, write_line);
+			END LOOP;
+			file_close(write_file);
+		end if;
+	if falling_edge(clock) then
+	
+		if reg_write = '1' and f_waitrequest = '0' and d_waitrequest = '0' and write_address /=0 then --R0 is always zero
 			reg_block(write_address) <= write_data; --write data to register location
 		end if;
 	end if;	

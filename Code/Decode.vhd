@@ -11,6 +11,8 @@ entity Decode is
 	);
 	port( 
 		clock: in std_logic;
+		f_waitrequest: in std_logic;
+		d_waitrequest: in std_logic;
 		instruction: in std_logic_vector (31 downto 0);
 		pc_updated : in integer range 0 to instr_mem_size-1;
 		pc_updated_delay : out integer range 0 to instr_mem_size-1;
@@ -19,7 +21,7 @@ entity Decode is
 		extended_immediate : out std_logic_vector (31 downto 0); -- extended immediate value
 		alu_opcode : out std_logic_vector (4 downto 0); -- operation code for ALU
 		
-		reg_write: in std_logic; -- register write enable signal
+		reg_write: in std_logic; -- register write enable signal ????????? why?????
 		write_address: in INTEGER RANGE 0 TO reg_size -1; --address to write to register
 		write_data: in std_logic_vector(31 downto 0); --data to write at register address
 		rd_address: out INTEGER RANGE 0 TO reg_size -1 -- destination register address	
@@ -54,6 +56,8 @@ signal counter1: INTEGER := 2;
 component RegisterBlock is 
 	port(
 		clk : in std_logic;
+		f_waitrequest: in std_logic;
+		d_waitrequest: in std_logic;
 		reg_write: in std_logic; -- register write enable signal
 		write_data: in std_logic_vector(31 downto 0);
 		write_address: in INTEGER RANGE 0 TO reg_size-1;
@@ -69,6 +73,8 @@ begin
 
 reg: RegisterBlock port map (
 						clk => clock,
+						fd_waitrequest => fd_waitrequest,
+						d_waitrequest => d_waitrequest,
 						reg_write => reg_write, -- register write enable signal
 						write_data => write_data,
 						write_address => write_address,
