@@ -5,6 +5,7 @@ use ieee.numeric_std.all;
 
 entity Memory is
 	generic(
+		reg_size : INTEGER := 32; --reg size = 2^5 addressing depth
 		data_mem_size : integer := 32768
 	);
 	port (
@@ -23,7 +24,10 @@ entity Memory is
 		m_readdata : in std_logic_vector (31 downto 0);
 		m_write : out std_logic := '0';
 		m_writedara : out std_logic_vector (31 downto 0);
-		m_waitrequest : in std_logic
+		m_waitrequest : in std_logic;
+		
+		rd_address: in INTEGER RANGE 0 TO reg_size -1; -- destination register address	
+		rd_address_delay: out INTEGER RANGE 0 TO reg_size -1
 	);
 end Memory;
 
@@ -35,6 +39,7 @@ begin
 	execute: process (clock)
 	begin
 		if (rising_edge(clock)) then
+			rd_address_delay <= rd_address;
 			case current_state is
 				when operating =>
 					if (m_waitrequest = '1') then

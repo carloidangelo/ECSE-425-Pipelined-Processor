@@ -6,8 +6,8 @@ use ieee.numeric_std.all;
 
 entity Decode is
 	generic(
-		instr_mem_size : integer := 4096;
-		reg_size : INTEGER := 32 --reg size = 2^5 addressing depth
+		reg_size : INTEGER := 32; --reg size = 2^5 addressing depth
+		instr_mem_size : integer := 4096
 	);
 	port( 
 		clock: in std_logic;
@@ -57,8 +57,11 @@ signal write_data: std_logic_vector(31 downto 0);
 
 ------- register block component
 component RegisterBlock is 
+	generic(
+		reg_size : INTEGER := 32 --reg size = 2^5 addressing depth
+	);
 	port(
-		clk : in std_logic;
+		clock : in std_logic;
 		f_waitrequest: in std_logic;
 		d_waitrequest: in std_logic;
 		reg_write: in std_logic; -- register write enable signal
@@ -75,7 +78,7 @@ end component;
 begin	
 
 reg: RegisterBlock port map (
-						clk => clock,
+						clock => clock,
 						f_waitrequest => f_waitrequest,
 						d_waitrequest => d_waitrequest,
 						reg_write => reg_write, -- register write enable signal
@@ -164,6 +167,7 @@ begin
 					when others =>
 						null;
 				end case;
+
 				-- stall pipeline for 2 clock cycles
 				if (rs_temp = rd_delay1 or counter1 = 1 or rt_temp = rd_delay1) then
 					rd_temp := 0;
@@ -171,15 +175,15 @@ begin
 					alu_opcode <= "00000";
 					delay <= '1';
 					counter1 <= counter1 - 1;
-				else 
-					counter1 <= 2;
-				end if;
 				-- stall pipeline for 1
-				if (rs_temp = rd_delay2 or rt_temp = rd_delay2) then
+				elsif (rs_temp = rd_delay2 or rt_temp = rd_delay2) then
 					rd_temp := 0;
 					rs_temp := 0;
 					alu_opcode <= "00000";
 					delay <= '1';
+				else 
+					counter1 <= 2;
+					delay <= '0';
 				end if;
 				rs<=rs_temp;
 				rt<=rt_temp;
@@ -242,21 +246,21 @@ begin
 					 when others => null;	  
 				end case;
 				-- stall pipeline for 2 clock cycles
-				if (rs_temp = rd_delay1 or counter1 = 1) then
+				if (rs_temp = rd_delay1 or counter1 = 1 or rt_temp = rd_delay1) then
 					rd_temp := 0;
 					rs_temp := 0;
-					alu_opcode <= "00000"; --add instruction
+					alu_opcode <= "00000";
 					delay <= '1';
 					counter1 <= counter1 - 1;
+				-- stall pipeline for 1
+				elsif (rs_temp = rd_delay2 or rt_temp = rd_delay2) then
+					rd_temp := 0;
+					rs_temp := 0;
+					alu_opcode <= "00000";
+					delay <= '1';
 				else 
 					counter1 <= 2;
-				end if;
-				-- stall pipeline for 1 clock cycle
-				if (rs_temp = rd_delay2) then
-					rd_temp := 0;
-					rs_temp := 0; 
-					alu_opcode <= "00000"; --add instruction
-					delay <= '1';
+					delay <= '0';
 				end if;
 				rs<=rs_temp;	
 				rd<=rd_temp;

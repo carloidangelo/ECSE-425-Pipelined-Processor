@@ -6,10 +6,12 @@ use ieee.numeric_std.all;
 
 entity Write_Back is
 	generic(
-		instr_mem_size : integer := 4096
+		instr_mem_size : integer := 4096;
+		reg_size : INTEGER := 32 --reg size = 2^5 addressing depth
 	);
 	port (
 		clock: in std_logic;
+		rd: in INTEGER RANGE 0 TO reg_size-1;
 		f_waitrequest: in std_logic;
 		d_waitrequest: in std_logic;
 		mem_status: in std_logic;
@@ -21,15 +23,20 @@ end Write_Back;
 architecture behaviour of Write_Back is
 
 signal reg_write : std_logic := '1';
-signal rs: INTEGER : = 0;
-signal rt: INTEGER : = 0; 
+signal rs: INTEGER := 0;
+signal rt: INTEGER := 0; 
 signal read_data1_signal: std_logic_vector(31 downto 0);
 signal read_data2_signal: std_logic_vector(31 downto 0);
 
+signal write_data : std_logic_vector(31 downto 0);
+
 ------- register block component
 component RegisterBlock is 
+	generic(
+		reg_size : INTEGER := 32 --reg size = 2^5 addressing depth
+	);
 	port(
-		clk : in std_logic;
+		clock: in std_logic;
 		f_waitrequest: in std_logic;
 		d_waitrequest: in std_logic;
 		reg_write: in std_logic; -- register write enable signal
@@ -45,12 +52,12 @@ end component;
 begin
 
 reg: RegisterBlock port map (
-						clk => clock,
-						fd_waitrequest => fd_waitrequest,
+						clock => clock,
+						f_waitrequest => f_waitrequest,
 						d_waitrequest => d_waitrequest,
 						reg_write => reg_write, -- register write enable signal
 						write_data => write_data,
-						write_address => write_address,
+						write_address => rd,
 						read_address1 => rs, -- rs (src address 1)
 						read_address2 => rt, -- rt (src address 2)
 						data_out1 => read_data1_signal, -- rs (data at src 1)
@@ -62,7 +69,9 @@ reg: RegisterBlock port map (
 		if (falling_edge(clock)) then
 			if (f_waitrequest = '0' and d_waitrequest = '0') then
 				if (mem_status = '1') then
+					write_data <= readdata;
 				else 
+					write_data <= alu_result;
 				end if;
 				
 			end if;
