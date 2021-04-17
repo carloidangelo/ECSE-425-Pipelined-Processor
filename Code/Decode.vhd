@@ -20,14 +20,12 @@ entity Decode is
 		read_data2 : out std_logic_vector(31 downto 0); 
 		extended_immediate : out std_logic_vector (31 downto 0); -- extended immediate value
 		alu_opcode : out std_logic_vector (4 downto 0); -- operation code for ALU
+		address : out std_logic_vector (25 downto 0);
 		
-		reg_write: in std_logic; -- register write enable signal ????????? why?????
-		write_address: in INTEGER RANGE 0 TO reg_size -1; --address to write to register
-		write_data: in std_logic_vector(31 downto 0); --data to write at register address
-		rd_address: out INTEGER RANGE 0 TO reg_size -1 -- destination register address	
+		rd_address: out INTEGER RANGE 0 TO reg_size -1; -- destination register address	
 		
 		-- data hazard detections
-		delay: out std_logic;
+		delay: out std_logic := '0'
 		
 		);
 end Decode;
@@ -48,9 +46,13 @@ signal read_data1_signal: std_logic_vector(31 downto 0);
 signal read_data2_signal: std_logic_vector(31 downto 0);
 
 -- data hazard detections
-signal rd_delay1: INTEGER;
-signal rd_delay2: INTEGER;
+signal rd_delay1: INTEGER RANGE 0 TO reg_size -1;
+signal rd_delay2: INTEGER RANGE 0 TO reg_size -1;
 signal counter1: INTEGER := 2;
+
+signal reg_write: std_logic := '0';
+signal write_address: INTEGER RANGE 0 TO reg_size -1;
+signal write_data: std_logic_vector(31 downto 0); 
 
 ------- register block component
 component RegisterBlock is 
@@ -73,7 +75,7 @@ begin
 
 reg: RegisterBlock port map (
 						clk => clock,
-						fd_waitrequest => fd_waitrequest,
+						f_waitrequest => f_waitrequest,
 						d_waitrequest => d_waitrequest,
 						reg_write => reg_write, -- register write enable signal
 						write_data => write_data,
@@ -162,7 +164,7 @@ begin
 						null;
 				end case;
 				-- stall pipeline for 2 clock cycles
-				if (rs_temp = rd_delay1 or counter1 > 0 or rt_temp = rd_delay1) then
+				if (rs_temp = rd_delay1 or counter1 = 1 or rt_temp = rd_delay1) then
 					rd_temp := 0;
 					rs_temp := 0;
 					alu_opcode <= "00000";
@@ -173,8 +175,8 @@ begin
 				end if;
 				-- stall pipeline for 1
 				if (rs_temp = rd_delay2 or rt_temp = rd_delay2) then
-					rd_temp = 0;
-					rs_temp = 0;
+					rd_temp := 0;
+					rs_temp := 0;
 					alu_opcode <= "00000";
 					delay <= '1';
 				end if;
@@ -239,7 +241,7 @@ begin
 					 when others => null;	  
 				end case;
 				-- stall pipeline for 2 clock cycles
-				if (rs_temp = rd_delay1 or counter1 > 0) then
+				if (rs_temp = rd_delay1 or counter1 = 1) then
 					rd_temp := 0;
 					rs_temp := 0;
 					alu_opcode <= "00000"; --add instruction
@@ -250,8 +252,8 @@ begin
 				end if;
 				-- stall pipeline for 1 clock cycle
 				if (rs_temp = rd_delay2) then
-					rd_temp = 0;
-					rs_temp = 0; 
+					rd_temp := 0;
+					rs_temp := 0; 
 					alu_opcode <= "00000"; --add instruction
 					delay <= '1';
 				end if;
