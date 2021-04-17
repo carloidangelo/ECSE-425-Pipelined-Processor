@@ -20,7 +20,7 @@ entity Decode is
 		read_data2 : out std_logic_vector(31 downto 0); 
 		extended_immediate : out std_logic_vector (31 downto 0); -- extended immediate value
 		alu_opcode : out std_logic_vector (4 downto 0); -- operation code for ALU
-		address : out std_logic_vector (25 downto 0);
+		address : out std_logic_vector (31 downto 0);
 		
 		rd_address: out INTEGER RANGE 0 TO reg_size -1; -- destination register address	
 		
@@ -34,6 +34,7 @@ architecture decode_behavior of Decode is
 
 signal extend_immediate: std_logic_vector(31 downto 0);
 signal zero_extend:  std_logic_vector(15 downto 0) := (others => '0'); --zero extend 16b
+signal zero_six_extend:  std_logic_vector(5 downto 0) := (others => '0'); --zero extend 6b
 signal opcode : std_logic_vector(5 downto 0);
 signal rs : INTEGER RANGE 0 TO reg_size -1; 
 signal rt : INTEGER RANGE 0 TO reg_size -1; 
@@ -186,11 +187,11 @@ begin
 				
 			elsif op_temp = "000010" then -- Jtype
 				-- j
-				address <= instruction(25 downto 0);
+				address <= zero_six_extend & instruction(25 downto 0);
 				alu_opcode <= "01111";
 			elsif op_temp = "000011" then -- Jtype
 				-- jal
-				address <= instruction(25 downto 0);
+				address <= zero_six_extend & instruction(25 downto 0);
 				alu_opcode <= "10000";       
 
 			else -- Itype
