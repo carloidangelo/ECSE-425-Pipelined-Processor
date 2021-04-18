@@ -24,7 +24,7 @@ entity Memory is
 		m_read : out std_logic := '0';
 		m_readdata : in std_logic_vector (31 downto 0);
 		m_write : out std_logic := '0';
-		m_writedara : out std_logic_vector (31 downto 0);
+		m_writedata : out std_logic_vector (31 downto 0);
 		m_waitrequest : in std_logic;
 		
 		rd_address: in INTEGER RANGE 0 TO reg_size -1; -- destination register address	
@@ -48,6 +48,7 @@ begin
 						if (alu_opcode = "10111") then 
 							status <= '1';
 							m_addr <= to_integer(unsigned(alu_result(14 downto 0)));
+							m_writedata <= writedata;
 							m_write <= '1';
 							current_state <= operating;
 						--read
