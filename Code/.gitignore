@@ -1,0 +1,15 @@
+incremental_db/
+output_files/
+simulation/
+work/
+db/
+c5_pin_model_dump.txt
+vsim.wlf
+Group10_Pipelined_Processor.qpf
+Pipelined_Processor.qsf
+../.DS_Store
+.DS_Store
+transcript
+ECSE425-Group10.cr.mti
+ECSE425-Group10.mpf
+Decode_tb.vhd.bak

@@ -5,8 +5,7 @@ use ieee.numeric_std.all;
 
 entity Pipelined_Processor is
 port(
-	clock : in std_logic;
-
+	clock : in std_logic
 );
 
 end Pipelined_Processor;
@@ -68,9 +67,9 @@ end component;
 
 
 --INSTRUCTION EXECUTE---
-component Execute is
-port();
-end component;
+--component Execute is
+--port();
+--end component;
 ---***********************---
 
 
