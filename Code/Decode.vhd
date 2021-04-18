@@ -11,21 +11,33 @@ entity Decode is
 	);
 	port( 
 		clock: in std_logic;
+
+		-- synchronie with instruction memory (or data memory if hazard)
 		f_waitrequest: in std_logic;
 		d_waitrequest: in std_logic;
+
+		-- instruction from IF stage
 		instruction: in std_logic_vector (31 downto 0);
+
+		-- PC + 4 from IF stage
 		pc_updated : in integer range 0 to instr_mem_size-1;
+
+		-- ID sends PC + 4 to EX stage for branch resolution
 		pc_updated_delay : out integer range 0 to instr_mem_size-1;
+
+		-- decoded values from instruction to send to EX stage
 		read_data1 : out std_logic_vector(31 downto 0); 
 		read_data2 : out std_logic_vector(31 downto 0); 
-		extended_immediate : out std_logic_vector (31 downto 0); -- extended immediate value
-		alu_opcode : out std_logic_vector (4 downto 0); -- operation code for ALU
+		extended_immediate : out std_logic_vector (31 downto 0);
 		address : out std_logic_vector (31 downto 0);
-		mem_status : in std_logic;
+
+		-- a code specifying what EX stage needs to do, based on the opcode of the instruction
+		alu_opcode : out std_logic_vector (4 downto 0);
 		
-		rd_address: out INTEGER RANGE 0 TO reg_size -1; -- destination register address	
+		-- destination register address for WB stage
+		rd_address: out INTEGER RANGE 0 TO reg_size -1; 	
 		
-		-- data hazard detections
+		-- send to IF stage to stall (hazard detection)
 		delay: out std_logic := '0'
 		
 		);
@@ -33,6 +45,7 @@ end Decode;
 	
 architecture decode_behavior of Decode is
 
+signal status_sync: std_logic := '0';
 signal extend_immediate: std_logic_vector(31 downto 0);
 signal zero_extend:  std_logic_vector(15 downto 0) := (others => '0'); --zero extend 16b
 signal zero_six_extend:  std_logic_vector(5 downto 0) := (others => '0'); --zero extend 6b
@@ -63,8 +76,6 @@ component RegisterBlock is
 	);
 	port(
 		clock : in std_logic;
-		f_waitrequest: in std_logic;
-		d_waitrequest: in std_logic;
 		reg_write: in std_logic; -- register write enable signal
 		write_data: in std_logic_vector(31 downto 0);
 		write_address: in INTEGER RANGE 0 TO reg_size-1;
@@ -80,8 +91,6 @@ begin
 
 reg: RegisterBlock port map (
 						clock => clock,
-						f_waitrequest => f_waitrequest,
-						d_waitrequest => d_waitrequest,
 						reg_write => reg_write, -- register write enable signal
 						write_data => write_data,
 						write_address => write_address,
@@ -105,9 +114,9 @@ variable j_address_temp: std_logic_vector(25 downto 0);
 
 begin
 		if(rising_edge(clock)) then
-		if ((f_waitrequest = '0') and ((mem_status = '1' and d_waitrequest = '0') or (mem_status = '0'))) then
 		case current_state is
 		when operating =>
+			if (f_waitrequest = '1' and status_sync = '1') then
 			--all instruction types
 			op_temp := instruction(31 downto 26);	
 			rs_temp := to_integer(unsigned(instruction(25 downto 21)));
@@ -249,7 +258,7 @@ begin
 					 when others => null;	  
 				end case;
 				-- stall pipeline for 2 clock cycles
-				if (rs_temp = rd_delay1 or rt_temp = rd_delay1) then
+				if (rs_temp = rd_delay1) then
 					rd_temp := 0;
 					rs_temp := 0;
 					rt_temp := 0;
@@ -259,7 +268,7 @@ begin
 					instr_hazard <= instruction;
 					current_state <= two_stall;
 				-- stall pipeline for 1
-				elsif (rs_temp = rd_delay2 or rt_temp = rd_delay2) then
+				elsif (rs_temp = rd_delay2) then
 					rd_temp := 0;
 					rs_temp := 0;
 					rt_temp := 0;
@@ -271,8 +280,15 @@ begin
 				end if;
 				rs<=rs_temp;	
 				rd<=rd_temp;
-			end if; 
+			end if;
+			status_sync <= '0';
+			elsif (f_waitrequest = '0') then
+				status_sync <= '1';
+			else 
+				status_sync <= '0';
+			end if;
 		when one_stall =>
+			if (d_waitrequest = '1' and status_sync = '1') then
 			--all instruction types
 			op_temp := instr_hazard(31 downto 26);	
 			rs_temp := to_integer(unsigned(instr_hazard(25 downto 21)));
@@ -394,7 +410,14 @@ begin
 			end if; 
 			delay <= '0';
 			current_state <= operating;
+			status_sync <= '0';
+			elsif (d_waitrequest = '0') then
+				status_sync <= '1';
+			else 
+				status_sync <= '0';
+			end if;
 		when two_stall =>
+			if (d_waitrequest = '1' and status_sync = '1') then
 			rd_temp := 0;
 			rs_temp := 0;
 			rt_temp := 0;
@@ -404,10 +427,15 @@ begin
 			rd<=rd_temp;
 			delay <= '1';
 			current_state <= one_stall;
+			status_sync <= '0';
+			elsif (d_waitrequest = '0') then
+				status_sync <= '1';
+			else 
+				status_sync <= '0';
+			end if;
 		when others =>
 			null;
 		end case;
-		end if;
 		end if;
 	end process;
 	

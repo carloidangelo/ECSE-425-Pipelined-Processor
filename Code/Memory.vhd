@@ -57,6 +57,7 @@ begin
 							current_state <= operating;
 						else 
 							alu_result_delay <= alu_result;
+							status <= '0';
 							current_state <= operating;
 						END IF;
 					elsif (m_waitrequest = '0') then
@@ -70,7 +71,6 @@ begin
 					-- synchronize with other memory unit, so pipeline order is preserved
 					if (f_waitrequest = '0') then
 						i_waitrequest <= '1';
-						status <= '0';
 						current_state <= operating;
 					else
 						i_waitrequest <= '0';
