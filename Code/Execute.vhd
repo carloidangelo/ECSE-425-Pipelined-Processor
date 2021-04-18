@@ -3,7 +3,7 @@ use ieee.std_logic_1164.all;
 use work.MIPSCPU_constants.all;
 use IEEE.numeric_std.all;
 
-entity ALU is
+entity Execute is
 	generic(
 			instr_mem_size : integer := 4096;
 		);
@@ -20,7 +20,7 @@ entity ALU is
     pc_updated : in integer range 0 to instr_mem_size-1; --for adder
     result : out integer range 0 to instr_mem_size-1 --for adder
   );
-end ALU;
+end Execute;
 
 -- Report Notes (remvove later)
 -- -- we used 64 instead of 32 for product vector size
@@ -74,7 +74,7 @@ begin
       when "00110" =>
         output_Z <= std_logic_vector(to_unsigned(to_integer(unsigned(input_X)) - to_integer(unsigned(input_Y)), output_Z'length));
            
-      -- XOR
+      -- xor
       when "00111" =>
         output_Z <= input_X xor input_Y;
 
