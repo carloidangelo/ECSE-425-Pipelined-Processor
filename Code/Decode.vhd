@@ -65,7 +65,7 @@ signal read_data2_signal: std_logic_vector(31 downto 0);
 -- data hazard detections
 signal rd_delay1: INTEGER RANGE 0 TO reg_size -1;
 signal rd_delay2: INTEGER RANGE 0 TO reg_size -1;
-type states is (operating,one_stall,two_stall);
+type states is (operating,one_stall,two_stall,control_stall_first,control_stall_second);
 signal current_state : states := operating;
 signal instr_hazard: std_logic_vector (31 downto 0);
 
@@ -117,6 +117,7 @@ begin
 		case current_state is
 		when operating =>
 			if (f_waitrequest = '1' and status_sync = '1') then
+			pc_updated_delay <= pc_updated;
 			--all instruction types
 			op_temp := instruction(31 downto 26);	
 			rs_temp := to_integer(unsigned(instruction(25 downto 21)));
@@ -174,6 +175,7 @@ begin
 					when "001000" => 
 						-- jr
 						alu_opcode <= "01110";
+						current_state <= control_stall_first;
 					when others =>
 						null;
 				end case;
@@ -205,11 +207,12 @@ begin
 				-- j
 				address <= zero_six_extend & instruction(25 downto 0);
 				alu_opcode <= "01111";
+				current_state <= control_stall_first;
 			elsif op_temp = "000011" then -- Jtype
 				-- jal
 				address <= zero_six_extend & instruction(25 downto 0);
 				alu_opcode <= "10000";       
-
+				current_state <= control_stall_first;
 			else -- Itype
 				rd_temp := to_integer(unsigned(instruction(20 downto 16))); --rd = rt for Itype
 				rd_delay1 <= rd_temp;
@@ -251,10 +254,12 @@ begin
 						  -- beq
 						  alu_opcode <= "11001";
 						  extend_immediate <= std_logic_vector(resize(signed(instruction(15 downto 0)), extend_immediate'length));
+						  current_state <= control_stall_first;
 					 when "000101" =>
 						  -- bne
 						  alu_opcode <= "11010";
 						  extend_immediate <= std_logic_vector(resize(signed(instruction(15 downto 0)), extend_immediate'length));
+						  current_state <= control_stall_first;
 					 when others => null;	  
 				end case;
 				-- stall pipeline for 2 clock cycles
@@ -289,6 +294,7 @@ begin
 			end if;
 		when one_stall =>
 			if (d_waitrequest = '1' and status_sync = '1') then
+			pc_updated_delay <= pc_updated;
 			--all instruction types
 			op_temp := instr_hazard(31 downto 26);	
 			rs_temp := to_integer(unsigned(instr_hazard(25 downto 21)));
@@ -344,6 +350,7 @@ begin
 					when "001000" => 
 						-- jr
 						alu_opcode <= "01110";
+						current_state <= control_stall_first;
 					when others =>
 						null;
 				end case;
@@ -355,11 +362,12 @@ begin
 				-- j
 				address <= zero_six_extend & instr_hazard(25 downto 0);
 				alu_opcode <= "01111";
+				current_state <= control_stall_first;
 			elsif op_temp = "000011" then -- Jtype
 				-- jal
 				address <= zero_six_extend & instr_hazard(25 downto 0);
 				alu_opcode <= "10000";       
-
+				current_state <= control_stall_first;
 			else -- Itype
 				rd_temp := to_integer(unsigned(instr_hazard(20 downto 16))); --rd = rt for Itype
 				
@@ -399,10 +407,12 @@ begin
 						  -- beq
 						  alu_opcode <= "11001";
 						  extend_immediate <= std_logic_vector(resize(signed(instr_hazard(15 downto 0)), extend_immediate'length));
+						  current_state <= control_stall_first;
 					 when "000101" =>
 						  -- bne
 						  alu_opcode <= "11010";
 						  extend_immediate <= std_logic_vector(resize(signed(instr_hazard(15 downto 0)), extend_immediate'length));
+						  current_state <= control_stall_first;
 					 when others => null;	  
 				end case;
 				rs<=rs_temp;	
@@ -418,6 +428,7 @@ begin
 			end if;
 		when two_stall =>
 			if (d_waitrequest = '1' and status_sync = '1') then
+				pc_updated_delay <= pc_updated;
 				rd_temp := 0;
 				rs_temp := 0;
 				rt_temp := 0;
@@ -427,6 +438,40 @@ begin
 				rd<=rd_temp;
 				delay <= '1';
 				current_state <= one_stall;
+				status_sync <= '0';
+			elsif (d_waitrequest = '0') then
+				status_sync <= '1';
+			else 
+				status_sync <= '0';
+			end if;
+		when control_stall_first =>
+			if (d_waitrequest = '1' and status_sync = '1') then
+				pc_updated_delay <= pc_updated;
+				rd_temp := 0;
+				rs_temp := 0;
+				rt_temp := 0;
+				alu_opcode <= "00000";
+				rs<=rs_temp;
+				rt<=rt_temp;
+				rd<=rd_temp;
+				current_state <= control_stall_second;
+				status_sync <= '0';
+			elsif (d_waitrequest = '0') then
+				status_sync <= '1';
+			else 
+				status_sync <= '0';
+			end if;
+		when control_stall_second =>
+			if (d_waitrequest = '1' and status_sync = '1') then
+				pc_updated_delay <= pc_updated;
+				rd_temp := 0;
+				rs_temp := 0;
+				rt_temp := 0;
+				alu_opcode <= "00000";
+				rs<=rs_temp;
+				rt<=rt_temp;
+				rd<=rd_temp;
+				current_state <= operating;
 				status_sync <= '0';
 			elsif (d_waitrequest = '0') then
 				status_sync <= '1';
