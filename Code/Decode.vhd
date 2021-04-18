@@ -41,7 +41,7 @@ signal rt : INTEGER RANGE 0 TO reg_size -1;
 signal rd : INTEGER RANGE 0 TO reg_size -1; 
 signal shamt : std_logic_vector(4 downto 0);
 signal funct : std_logic_vector(5 downto 0);
----jtypes have address bits, currently not sure what to do with address
+---jtypes have address bits
 signal j_address: std_logic_vector(25 downto 0); 
 signal read_data1_signal: std_logic_vector(31 downto 0);
 signal read_data2_signal: std_logic_vector(31 downto 0);
