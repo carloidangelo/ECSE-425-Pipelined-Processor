@@ -22,7 +22,9 @@ entity Fetch is
 		m_waitrequest : in std_logic;
 
 		mem_status : in std_logic;
-		d_waitrequest : in std_logic
+		d_waitrequest : in std_logic;
+		
+		delay: in std_logic
 	);
 end Fetch;
 
@@ -37,21 +39,23 @@ begin
 		if (rising_edge(clock)) then
 			case current_state is
 				when operating =>
-					if (m_waitrequest = '1') then
-						m_addr <= pc;
-						m_read <= '1';
-						current_state <= operating;
-					elsif (m_waitrequest = '0') then
-						if (branch_taken = '0') then --multiplexer 
-							pc <= pc + 4;
-						else
-							pc <= pc_branch;
+					if (delay = '0') then
+						if (m_waitrequest = '1') then
+							m_addr <= pc;
+							m_read <= '1';
+							current_state <= operating;
+						elsif (m_waitrequest = '0') then
+							if (branch_taken = '0') then --multiplexer 
+								pc <= pc + 4;
+							else
+								pc <= pc_branch;
+							end if;
+							pc_updated <= pc + 4;
+							instr <= m_readdata;
+							m_read <= '0';
+							i_waitrequest <= '0';
+							current_state <= reset;
 						end if;
-						pc_updated <= pc + 4;
-						instr <= m_readdata;
-						m_read <= '0';
-						i_waitrequest <= '0';
-						current_state <= reset;
 					end if;
 				when reset =>
 					if (mem_status = '1') then

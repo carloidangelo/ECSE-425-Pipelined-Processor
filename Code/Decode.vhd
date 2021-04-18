@@ -6,8 +6,8 @@ use ieee.numeric_std.all;
 
 entity Decode is
 	generic(
-		instr_mem_size : integer := 4096;
-		reg_size : INTEGER := 32 --reg size = 2^5 addressing depth
+		reg_size : INTEGER := 32; --reg size = 2^5 addressing depth
+		instr_mem_size : integer := 4096
 	);
 	port( 
 		clock: in std_logic;
@@ -20,14 +20,12 @@ entity Decode is
 		read_data2 : out std_logic_vector(31 downto 0); 
 		extended_immediate : out std_logic_vector (31 downto 0); -- extended immediate value
 		alu_opcode : out std_logic_vector (4 downto 0); -- operation code for ALU
+		address : out std_logic_vector (31 downto 0);
 		
-		reg_write: in std_logic; -- register write enable signal ????????? why?????
-		write_address: in INTEGER RANGE 0 TO reg_size -1; --address to write to register
-		write_data: in std_logic_vector(31 downto 0); --data to write at register address
-		rd_address: out INTEGER RANGE 0 TO reg_size -1 -- destination register address	
+		rd_address: out INTEGER RANGE 0 TO reg_size -1; -- destination register address	
 		
 		-- data hazard detections
-		delay: out std_logic;
+		delay: out std_logic := '0'
 		
 		);
 end Decode;
@@ -36,6 +34,7 @@ architecture decode_behavior of Decode is
 
 signal extend_immediate: std_logic_vector(31 downto 0);
 signal zero_extend:  std_logic_vector(15 downto 0) := (others => '0'); --zero extend 16b
+signal zero_six_extend:  std_logic_vector(5 downto 0) := (others => '0'); --zero extend 6b
 signal opcode : std_logic_vector(5 downto 0);
 signal rs : INTEGER RANGE 0 TO reg_size -1; 
 signal rt : INTEGER RANGE 0 TO reg_size -1; 
@@ -48,14 +47,21 @@ signal read_data1_signal: std_logic_vector(31 downto 0);
 signal read_data2_signal: std_logic_vector(31 downto 0);
 
 -- data hazard detections
-signal rd_delay1: INTEGER;
-signal rd_delay2: INTEGER;
+signal rd_delay1: INTEGER RANGE 0 TO reg_size -1;
+signal rd_delay2: INTEGER RANGE 0 TO reg_size -1;
 signal counter1: INTEGER := 2;
+
+signal reg_write: std_logic := '0';
+signal write_address: INTEGER RANGE 0 TO reg_size -1;
+signal write_data: std_logic_vector(31 downto 0); 
 
 ------- register block component
 component RegisterBlock is 
+	generic(
+		reg_size : INTEGER := 32 --reg size = 2^5 addressing depth
+	);
 	port(
-		clk : in std_logic;
+		clock : in std_logic;
 		f_waitrequest: in std_logic;
 		d_waitrequest: in std_logic;
 		reg_write: in std_logic; -- register write enable signal
@@ -72,8 +78,8 @@ end component;
 begin	
 
 reg: RegisterBlock port map (
-						clk => clock,
-						fd_waitrequest => fd_waitrequest,
+						clock => clock,
+						f_waitrequest => f_waitrequest,
 						d_waitrequest => d_waitrequest,
 						reg_write => reg_write, -- register write enable signal
 						write_data => write_data,
@@ -161,22 +167,23 @@ begin
 					when others =>
 						null;
 				end case;
+
 				-- stall pipeline for 2 clock cycles
-				if (rs_temp = rd_delay1 or counter1 > 0 or rt_temp = rd_delay1) then
+				if (rs_temp = rd_delay1 or counter1 = 1 or rt_temp = rd_delay1) then
 					rd_temp := 0;
 					rs_temp := 0;
 					alu_opcode <= "00000";
 					delay <= '1';
 					counter1 <= counter1 - 1;
-				else 
-					counter1 <= 2;
-				end if;
 				-- stall pipeline for 1
-				if (rs_temp = rd_delay2 or rt_temp = rd_delay2) then
-					rd_temp = 0;
-					rs_temp = 0;
+				elsif (rs_temp = rd_delay2 or rt_temp = rd_delay2) then
+					rd_temp := 0;
+					rs_temp := 0;
 					alu_opcode <= "00000";
 					delay <= '1';
+				else 
+					counter1 <= 2;
+					delay <= '0';
 				end if;
 				rs<=rs_temp;
 				rt<=rt_temp;
@@ -184,11 +191,11 @@ begin
 				
 			elsif op_temp = "000010" then -- Jtype
 				-- j
-				address <= instruction(25 downto 0);
+				address <= zero_six_extend & instruction(25 downto 0);
 				alu_opcode <= "01111";
 			elsif op_temp = "000011" then -- Jtype
 				-- jal
-				address <= instruction(25 downto 0);
+				address <= zero_six_extend & instruction(25 downto 0);
 				alu_opcode <= "10000";       
 
 			else -- Itype
@@ -239,21 +246,21 @@ begin
 					 when others => null;	  
 				end case;
 				-- stall pipeline for 2 clock cycles
-				if (rs_temp = rd_delay1 or counter1 > 0) then
+				if (rs_temp = rd_delay1 or counter1 = 1 or rt_temp = rd_delay1) then
 					rd_temp := 0;
 					rs_temp := 0;
-					alu_opcode <= "00000"; --add instruction
+					alu_opcode <= "00000";
 					delay <= '1';
 					counter1 <= counter1 - 1;
+				-- stall pipeline for 1
+				elsif (rs_temp = rd_delay2 or rt_temp = rd_delay2) then
+					rd_temp := 0;
+					rs_temp := 0;
+					alu_opcode <= "00000";
+					delay <= '1';
 				else 
 					counter1 <= 2;
-				end if;
-				-- stall pipeline for 1 clock cycle
-				if (rs_temp = rd_delay2) then
-					rd_temp = 0;
-					rs_temp = 0; 
-					alu_opcode <= "00000"; --add instruction
-					delay <= '1';
+					delay <= '0';
 				end if;
 				rs<=rs_temp;	
 				rd<=rd_temp;
