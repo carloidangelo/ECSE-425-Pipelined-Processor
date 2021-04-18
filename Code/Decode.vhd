@@ -408,26 +408,26 @@ begin
 				rs<=rs_temp;	
 				rd<=rd_temp;
 			end if; 
-			delay <= '0';
 			current_state <= operating;
 			status_sync <= '0';
 			elsif (d_waitrequest = '0') then
+				delay <= '0';
 				status_sync <= '1';
 			else 
 				status_sync <= '0';
 			end if;
 		when two_stall =>
 			if (d_waitrequest = '1' and status_sync = '1') then
-			rd_temp := 0;
-			rs_temp := 0;
-			rt_temp := 0;
-			alu_opcode <= "00000";
-			rs<=rs_temp;
-			rt<=rt_temp;
-			rd<=rd_temp;
-			delay <= '1';
-			current_state <= one_stall;
-			status_sync <= '0';
+				rd_temp := 0;
+				rs_temp := 0;
+				rt_temp := 0;
+				alu_opcode <= "00000";
+				rs<=rs_temp;
+				rt<=rt_temp;
+				rd<=rd_temp;
+				delay <= '1';
+				current_state <= one_stall;
+				status_sync <= '0';
 			elsif (d_waitrequest = '0') then
 				status_sync <= '1';
 			else 
