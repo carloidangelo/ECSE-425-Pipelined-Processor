@@ -25,15 +25,13 @@ generic(
 		pc_branch : in integer range 0 to instr_mem_size-1;
 		branch_taken : in std_logic;
 		i_waitrequest : out std_logic := '1';
- 
+		status : out std_logic := '1';
 		m_addr : out integer range 0 to instr_mem_size-1;
 		m_read : out std_logic := '0';
 		m_readdata : in std_logic_vector (31 downto 0);
 		m_waitrequest : in std_logic;
-
 		mem_status : in std_logic;
 		d_waitrequest : in std_logic;
-		
 		delay: in std_logic
 	);
 end component;
@@ -46,35 +44,51 @@ generic(
 	);
 	port( 
 		clock: in std_logic;
+		-- synchronie with instruction memory (or data memory if hazard)
 		f_waitrequest: in std_logic;
 		d_waitrequest: in std_logic;
+		-- instruction from IF stage
 		instruction: in std_logic_vector (31 downto 0);
+		-- PC + 4 from IF stage
 		pc_updated : in integer range 0 to instr_mem_size-1;
+		-- ID sends PC + 4 to EX stage for branch resolution
 		pc_updated_delay : out integer range 0 to instr_mem_size-1;
+		-- decoded values from instruction to send to EX stage
 		read_data1 : out std_logic_vector(31 downto 0); 
 		read_data2 : out std_logic_vector(31 downto 0); 
-		extended_immediate : out std_logic_vector (31 downto 0); -- extended immediate value
-		alu_opcode : out std_logic_vector (4 downto 0); -- operation code for ALU
+		extended_immediate : out std_logic_vector (31 downto 0);
 		address : out std_logic_vector (31 downto 0);
-		
-		rd_address: out INTEGER RANGE 0 TO reg_size -1; -- destination register address	
-		
-		-- data hazard detections
+		-- a code specifying what EX stage needs to do, based on the opcode of the instruction
+		alu_opcode : out std_logic_vector (4 downto 0);
+		-- destination register address for WB stage
+		rd_address: out INTEGER RANGE 0 TO reg_size -1; 	
+		-- send to IF stage to stall (hazard detection)
 		delay: out std_logic := '0'
-		
 		);
 end component;
 
 
 --INSTRUCTION EXECUTE---
---component Execute is
---port();
---end component;
----***********************---
+component Execute is
+	generic(
+			instr_mem_size : integer := 4096;
+		);
+  port (
+		input_X  : in std_logic_vector (31 downto 0); --alu
+		input_Y  : in std_logic_vector (31 downto 0); --alu
+		address : in std_logic_vector (31 downto 0); --alu
+		alu_opcode : in std_logic_vector (4 downto 0); --alu
+		pc_branch : out integer range 0 to instr_mem_size-1; --alu
+		branch_taken : out std_logic:= '0'; --alu
+		output_Z : out std_logic_vector(31 downto 0); --alu
+		immediate : in std_logic_vector (31 downto 0); -- extended immediate value --for adder
+		pc_updated : in integer range 0 to instr_mem_size-1; --for adder
+		result : out integer range 0 to instr_mem_size-1 --for adder
+  );
+end component;
 
 
-
----MEMORY-----
+-------MEMORY---------
 component Data_Memory is
 GENERIC(
 		ram_size : INTEGER := 32768;
@@ -101,13 +115,29 @@ generic(
 	port (
 		clock: in std_logic;
 		rd: in INTEGER RANGE 0 TO reg_size-1;
-		f_waitrequest: in std_logic;
 		d_waitrequest: in std_logic;
 		mem_status: in std_logic;
 		readdata : in std_logic_vector (31 downto 0);
 		alu_result : in std_logic_vector (31 downto 0)
 	);
 end component;
+
+-----INSTRUCTION MEMORY-------
+component Instruction_Memory is
+GENERIC(
+		instr_mem_size : INTEGER := 4096;
+		mem_delay : time := 1 ns;
+		clock_period : time := 1 ns
+	);
+	PORT (
+		clock: IN STD_LOGIC;
+		address: IN INTEGER RANGE 0 TO instr_mem_size-1;
+		memread: IN STD_LOGIC;
+		readdata: OUT STD_LOGIC_VECTOR (31 DOWNTO 0);
+		waitrequest: OUT STD_LOGIC
+	);
+end component;
+
 
 ------------------------------ BEGIN SIGNAL DECLARATIONS------------------------------------
 ---FETCH
@@ -126,7 +156,7 @@ end component;
 
 
 ----DECODE
-	signal f_waitrequest: std_logic;
+	signal 	f_waitrequest: std_logic;
 	signal	pc_updated_delay : integer range 0 to instr_mem_size-1;
 	signal	read_data1 : std_logic_vector(31 downto 0); 
 	signal	read_data2 : std_logic_vector(31 downto 0); 
@@ -136,8 +166,7 @@ end component;
 	signal	rd_address: INTEGER RANGE 0 TO reg_size -1; -- destination register address	
 
 ---EXECUTE
-
-
+	signal output_Z : std_logic_vector(31 downto 0);
 
 ----MEMORY
 	signal writedata: STD_LOGIC_VECTOR (31 DOWNTO 0);
@@ -151,8 +180,8 @@ end component;
 -----WRITE BACK
 	signal mem_status: std_logic;
 	signal alu_result : std_logic_vector (31 downto 0)
-------------------------------- END SIGNAL DECLARATIONS------------------------------------
 
+------------------------------- END SIGNAL DECLARATIONS------------------------------------
 begin
 
 instruction_fetch: Fetch
@@ -187,19 +216,29 @@ port map(
 		alu_opcode => alu_opcode, -- operation code for ALU
 		address => address,
 		rd_address => rd_address, -- destination register address	
-		
 		-- data hazard detections
 		delay => delay --- this is preset to 0, will it work ???
 );
 
 ----TOD0
 instruction_execute: Execute
-port map( );
+port map( 
+		input_X => read_data1, --alu
+		input_Y => read_data2, --alu
+		address => address, --alu
+		alu_opcode => alu_opcode, --alu
+		pc_branch => pc_branch, --alu
+		branch_taken => branch_taken, --alu
+		output_Z => output_Z, --alu
+		immediate => extended_immediate,-- extended immediate value --for adder
+		pc_updated => pc_updated, --for adder
+		result => alu_result --for adder
+
+);
 
 
 memory: Data_Memory 
 port map( 
-
 		clock => clock,
 		writedata => writedata,
 		address => address,
@@ -211,7 +250,6 @@ port map(
 
 wb: Write_Back
 port map( 
-
 		clock => clock,
 		rd => rd_addresss,
 		f_waitrequest => f_waitrequest,
@@ -222,5 +260,13 @@ port map(
 
 );
 
+instrmem: Instruction_Memory
+port map( 
+		clock => clock,
+		address => address,
+		memread => memread,
+		readdata => readdata,
+		waitrequest  => waitrequest
+);
 
 end architecture;
