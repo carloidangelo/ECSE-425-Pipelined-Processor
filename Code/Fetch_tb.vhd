@@ -18,14 +18,16 @@ component Fetch is
 		pc_branch : in integer range 0 to instr_mem_size-1;
 		branch_taken : in std_logic;
 		i_waitrequest : out std_logic := '1';
- 
+ 		status : out std_logic := '1';
+
 		m_addr : out integer range 0 to instr_mem_size-1;
 		m_read : out std_logic := '0';
 		m_readdata : in std_logic_vector (31 downto 0);
 		m_waitrequest : in std_logic;
 
 		mem_status : in std_logic;
-		d_waitrequest : in std_logic
+		d_waitrequest : in std_logic;
+		delay: in std_logic
 	);
 end component;
 
@@ -53,12 +55,14 @@ signal instr : std_logic_vector (31 downto 0);
 signal pc_branch : integer range 0 to 4096-1;
 signal branch_taken : std_logic;
 signal i_waitrequest : std_logic;
+signal status : std_logic;
 signal m_addr : integer range 0 to 4096-1;
 signal m_read : std_logic;
 signal m_readdata : std_logic_vector (31 downto 0);
 signal m_waitrequest : std_logic;
 signal mem_status : std_logic;
 signal d_waitrequest : std_logic;
+signal delay: std_logic;
 
 begin
 
@@ -72,12 +76,14 @@ port map(
 	pc_branch => pc_branch,
 	branch_taken => branch_taken,
 	i_waitrequest => i_waitrequest,
+	status => status,
 	m_addr => m_addr,
 	m_read => m_read,
 	m_readdata => m_readdata,
 	m_waitrequest => m_waitrequest,
 	mem_status => mem_status,
-	d_waitrequest => d_waitrequest
+	d_waitrequest => d_waitrequest,
+	delay => delay
 );
 
 
@@ -103,6 +109,7 @@ test_process : process
 begin
 	mem_status <= '1'; -- assume memory stage is being used
 	d_waitrequest <= '0';	-- assume memory stage is finished processing read/write
+	delay <= '0'; -- assume there are no data hazards
 
 	-- Test case 1: Fetch instruction pc = 0
 	report "Test case 1";
