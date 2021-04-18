@@ -445,7 +445,7 @@ begin
 				status_sync <= '0';
 			end if;
 		when control_stall_first =>
-			if (d_waitrequest = '1' and status_sync = '1') then
+			if (f_waitrequest = '1' and status_sync = '1') then
 				pc_updated_delay <= pc_updated;
 				rd_temp := 0;
 				rs_temp := 0;
@@ -456,13 +456,13 @@ begin
 				rd<=rd_temp;
 				current_state <= control_stall_second;
 				status_sync <= '0';
-			elsif (d_waitrequest = '0') then
+			elsif (f_waitrequest = '0') then
 				status_sync <= '1';
 			else 
 				status_sync <= '0';
 			end if;
 		when control_stall_second =>
-			if (d_waitrequest = '1' and status_sync = '1') then
+			if (f_waitrequest = '1' and status_sync = '1') then
 				pc_updated_delay <= pc_updated;
 				rd_temp := 0;
 				rs_temp := 0;
@@ -473,7 +473,7 @@ begin
 				rd<=rd_temp;
 				current_state <= operating;
 				status_sync <= '0';
-			elsif (d_waitrequest = '0') then
+			elsif (f_waitrequest = '0') then
 				status_sync <= '1';
 			else 
 				status_sync <= '0';
