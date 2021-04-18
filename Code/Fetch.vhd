@@ -15,6 +15,7 @@ entity Fetch is
 		pc_branch : in integer range 0 to instr_mem_size-1;
 		branch_taken : in std_logic;
 		i_waitrequest : out std_logic := '1';
+		status : out std_logic := '1';
  
 		m_addr : out integer range 0 to instr_mem_size-1;
 		m_read : out std_logic := '0';
@@ -40,6 +41,7 @@ begin
 			case current_state is
 				when operating =>
 					if (delay = '0') then
+						status <= '1';
 						if (m_waitrequest = '1') then
 							m_addr <= pc;
 							m_read <= '1';
@@ -56,6 +58,8 @@ begin
 							i_waitrequest <= '0';
 							current_state <= reset;
 						end if;
+					else
+						status <= '0';
 					end if;
 				when reset =>
 					if (mem_status = '1') then

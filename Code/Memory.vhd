@@ -17,6 +17,7 @@ entity Memory is
 		readdata : out std_logic_vector (31 downto 0);
 		alu_opcode : in std_logic_vector (4 downto 0);
 		status : out std_logic := '0';	
+		fetch_status: in std_logic;
 		alu_result_delay : out std_logic_vector (31 downto 0);
  
 		m_addr : out integer range 0 to data_mem_size-1;
@@ -57,6 +58,7 @@ begin
 							current_state <= operating;
 						else 
 							alu_result_delay <= alu_result;
+							status <= '0';
 							current_state <= operating;
 						END IF;
 					elsif (m_waitrequest = '0') then
@@ -68,14 +70,18 @@ begin
 					end if;
 				when reset =>
 					-- synchronize with other memory unit, so pipeline order is preserved
-					if (f_waitrequest = '0') then
+					if (fetch_status = '1') then
+						if (f_waitrequest = '0' ) then
+							i_waitrequest <= '1';
+							current_state <= operating;
+						else
+							i_waitrequest <= '0';
+							current_state <= reset;
+						END IF;
+					else 
 						i_waitrequest <= '1';
-						status <= '0';
 						current_state <= operating;
-					else
-						i_waitrequest <= '0';
-						current_state <= reset;
-					END IF;
+					end if;
 				when others =>
 					null;
 			end case;
