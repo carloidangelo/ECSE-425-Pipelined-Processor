@@ -58,7 +58,7 @@ signal write_address: INTEGER RANGE 0 TO reg_size -1;
 signal write_data: std_logic_vector(31 downto 0); 
 
 ---jtypes have address bits
-signal j_address: std_logic_vector(25 downto 0); 
+--signal j_address: std_logic_vector(25 downto 0); 
 signal read_data1_signal: std_logic_vector(31 downto 0);
 signal read_data2_signal: std_logic_vector(31 downto 0);
 
@@ -109,7 +109,7 @@ variable rd_temp : INTEGER RANGE 0 TO reg_size -1;
 variable shamt_temp : std_logic_vector(4 downto 0);
 variable funct_temp : std_logic_vector(5 downto 0);
 ---jtypes have address bits, currently not sure what to do with address
-variable j_address_temp: std_logic_vector(25 downto 0);
+--variable j_address_temp: std_logic_vector(25 downto 0);
 
 
 begin
