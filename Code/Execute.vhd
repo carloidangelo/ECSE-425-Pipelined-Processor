@@ -1,40 +1,45 @@
 library ieee;
 use ieee.std_logic_1164.all;
-use work.MIPSCPU_constants.all;
 use IEEE.numeric_std.all;
 
 entity Execute is
 	generic(
-			instr_mem_size : integer := 4096;
+			reg_size : INTEGER := 32; --reg size = 2^5 addressing depth
+			instr_mem_size : integer := 4096
 		);
   port (
     input_X  : in std_logic_vector (31 downto 0); --alu
     input_Y  : in std_logic_vector (31 downto 0); --alu
 	address : in std_logic_vector (31 downto 0); --alu
     alu_opcode : in std_logic_vector (4 downto 0); --alu
+	 alu_opcode_delayed : out std_logic_vector (4 downto 0); --alu
 	pc_branch : out integer range 0 to instr_mem_size-1; --alu
 	branch_taken : out std_logic:= '0'; --alu
     output_Z : out std_logic_vector(31 downto 0); --alu
-   
+	 input_Y_delayed: out std_logic_vector (31 downto 0);
     immediate : in std_logic_vector (31 downto 0); -- extended immediate value --for adder
     pc_updated : in integer range 0 to instr_mem_size-1; --for adder
-    result : out integer range 0 to instr_mem_size-1 --for adder
+	 rd_address : in INTEGER RANGE 0 TO reg_size -1;
+	 rd_address_delayed: out INTEGER RANGE 0 TO reg_size -1
   );
 end Execute;
 
 -- Report Notes (remvove later)
 -- -- we used 64 instead of 32 for product vector size
-architecture architecture of ALU is
-  -- hi & lo -> from reference of MIPS used to assign remainder_ and quotient results of a division operation
-  signal hi, lo, remainder_, quotient : std_logic_vector (31 downto 0);
+architecture behavior of Execute is
+  -- hi & lo -> from reference of MIPS used to assign remainder (rmdr) and quotient results of a division operation
+  signal hi, lo, rmdr, quotient : std_logic_vector (31 downto 0);
   --signal product                     : std_logic_vector (31 downto 0);
   signal product : std_logic_vector (63 downto 0);
+  signal increment : signed (31 downto 0);
 
 begin
-
+	input_Y_delayed <= input_Y;
+	alu_opcode_delayed <= alu_opcode;
+	rd_address_delayed <= rd_address;
   process (input_X, input_Y, alu_opcode)
   begin
-
+	
     case alu_opcode is
       -- R-Types 
 
@@ -49,8 +54,8 @@ begin
       -- div
       when "00010" =>
         quotient  <= std_logic_vector(to_unsigned(to_integer(unsigned(input_X)) / to_integer(unsigned(input_Y)), output_Z'length));
-        remainder_ <= std_logic_vector(to_unsigned(to_integer(unsigned(input_X)) mod to_integer(unsigned(input_Y)), remainder_'length));
-        hi <= remainder_;
+        rmdr <= std_logic_vector(to_unsigned(to_integer(unsigned(input_X)) mod to_integer(unsigned(input_Y)), rmdr'length));
+        hi <= rmdr;
         lo <= quotient;
         output_Z <= quotient;
 
@@ -172,14 +177,7 @@ begin
     end case;
 
   end process;
+  increment <= shift_left(signed(immediate),2);
+  pc_branch <= pc_updated + to_integer(increment); 
 
-end architecture;
-
-architecture adder_arch of adder is
-
-signal increment : signed (31 downto 0);
-    
-begin
-    increment <= shift_left(signed(immediate),2);
-    result <= pc_updated + to_integer(increment); 
-end adder_arch;
+end behavior;
