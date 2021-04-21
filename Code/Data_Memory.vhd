@@ -57,15 +57,18 @@ BEGIN
 			END LOOP;
 			file_close(write_file);
 		end if;
-
+		
 		IF (clock'event AND clock = '1') THEN
+			-- if there is a read request
 			IF (memread = '1') THEN
+				-- assign
 				fetch_instr(7 downto 0) <= ram_block(address);
 				fetch_instr(15 downto 8) <= ram_block(address + 1);
 				fetch_instr(23 downto 16) <= ram_block(address + 2);
 				fetch_instr(31 downto 24) <= ram_block(address + 3);
-			
+			-- if there is a write request
 			ELSIF (memwrite = '1') THEN
+				-- define the data into given address of the memory
 				ram_block(address) <= writedata(7 DOWNTO 0);
 				ram_block(address+1) <= writedata(15 downto 8);
 				ram_block(address+2) <= writedata(23 downto 16);
