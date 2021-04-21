@@ -47,11 +47,11 @@ BEGIN
 		--Note: testbench is 10000 clock cycles as stated in project description
 		IF(now > 9999999 ps)THEN
 			file_open(write_file, "memory.txt", write_mode);
-			For i in 0 to ram_size-1 LOOP
-				write_data(7 downto 0) := ram_block(i);
-				write_data(15 downto 8) := ram_block(i + 1);
-				write_data(23 downto 16) := ram_block(i + 2);
-				write_data(31 downto 24) := ram_block(i + 3);
+			For i in 0 to (ram_size/4)-1 LOOP
+				write_data(7 downto 0) := ram_block(4*i);
+				write_data(15 downto 8) := ram_block(4*i + 1);
+				write_data(23 downto 16) := ram_block(4*i + 2);
+				write_data(31 downto 24) := ram_block(4*i + 3);
 				write(write_line, write_data);
 				writeline(write_file, write_line);
 			END LOOP;
