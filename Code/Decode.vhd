@@ -46,7 +46,7 @@ end Decode;
 architecture decode_behavior of Decode is
 
 signal status_sync: std_logic := '0';
-signal extend_immediate: std_logic_vector(31 downto 0);
+signal extend_immediate: std_logic_vector(31 downto 0):= (others => '0');
 signal zero_extend:  std_logic_vector(15 downto 0) := (others => '0'); --zero extend 16b
 signal zero_six_extend:  std_logic_vector(5 downto 0) := (others => '0'); --zero extend 6b
 signal rs : INTEGER RANGE 0 TO reg_size -1; 

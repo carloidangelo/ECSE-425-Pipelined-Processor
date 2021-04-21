@@ -29,7 +29,7 @@ generic(
 		clock: in std_logic;
 		pc_updated : out integer range 0 to instr_mem_size-1;
 		instr : out std_logic_vector (31 downto 0);
-		pc_branch : in integer range 0 to instr_mem_size-1;
+		pc_branch : in integer;
 		branch_taken : in std_logic;
 		i_waitrequest : out std_logic := '1';
 		status : out std_logic := '1';
@@ -88,13 +88,14 @@ component Execute is
 			instr_mem_size : integer := instr_mem_size
 		);
   port (
+		clock : in std_logic;
 		input_X  : in std_logic_vector (31 downto 0); 
 		input_Y  : in std_logic_vector (31 downto 0); 
 		address : in std_logic_vector (31 downto 0); 
 		alu_opcode : in std_logic_vector (4 downto 0); 
 		alu_opcode_delayed : out std_logic_vector (4 downto 0); 
-		pc_branch : out integer range 0 to instr_mem_size-1; 
-		branch_taken : out std_logic:= '0'; 
+		pc_branch : out integer; 
+		branch_taken : out std_logic := '0'; 
 		output_Z : out std_logic_vector(31 downto 0); 
 		input_Y_delayed: out std_logic_vector (31 downto 0);
 		immediate : in std_logic_vector (31 downto 0); 
@@ -172,8 +173,8 @@ end component;
 ---FETCH
 	signal pc_updated : integer range 0 to instr_mem_size-1;
 	signal instr : std_logic_vector (31 downto 0);
-	signal pc_branch : integer range 0 to instr_mem_size-1;
-	signal branch_taken : std_logic;
+	signal pc_branch : integer;
+	signal branch_taken : std_logic := '0';
 	signal delay: std_logic;
 	signal status : std_logic;
 	signal i_waitrequest : std_logic := '1';
@@ -188,7 +189,7 @@ end component;
 	signal pc_updated_delay : integer range 0 to instr_mem_size-1;
 	signal read_data1 : std_logic_vector(31 downto 0); 
 	signal read_data2 : std_logic_vector(31 downto 0); 
-	signal extended_immediate : std_logic_vector (31 downto 0);
+	signal extended_immediate : std_logic_vector (31 downto 0):= (others => '0');
 	signal alu_opcode : std_logic_vector (4 downto 0); 
 	signal rd_address: INTEGER RANGE 0 TO reg_size -1; 
 
@@ -203,7 +204,7 @@ end component;
 	signal rd_address_delay: INTEGER RANGE 0 TO reg_size -1;
 	signal MM_readdata: std_logic_vector (31 downto 0);
 	signal alu_result_delay : std_logic_vector (31 downto 0);
-	signal mem_status : std_logic;
+	signal mem_status : std_logic := '0';
 	signal d_waitrequest : std_logic;	
 
 ------DATA MEMORY
@@ -265,6 +266,7 @@ port map(
 
 instruction_execute: Execute
 port map( 
+		clock => clock,
 		input_X => read_data1, 
 		input_Y => read_data2, 
 		address => EX_address, 

@@ -4,23 +4,24 @@ use IEEE.numeric_std.all;
 
 entity Execute is
 	generic(
-			reg_size : INTEGER := 32; --reg size = 2^5 addressing depth
-			instr_mem_size : integer := 4096
+		reg_size : INTEGER := 32; --reg size = 2^5 addressing depth
+		instr_mem_size : integer := 4096
 		);
   port (
-    input_X  : in std_logic_vector (31 downto 0); --alu
-    input_Y  : in std_logic_vector (31 downto 0); --alu
+	clock : in std_logic;
+    	input_X  : in std_logic_vector (31 downto 0); --alu
+    	input_Y  : in std_logic_vector (31 downto 0); --alu
 	address : in std_logic_vector (31 downto 0); --alu
-    alu_opcode : in std_logic_vector (4 downto 0); --alu
-	 alu_opcode_delayed : out std_logic_vector (4 downto 0); --alu
-	pc_branch : out integer range 0 to instr_mem_size-1; --alu
-	branch_taken : out std_logic:= '0'; --alu
-    output_Z : out std_logic_vector(31 downto 0); --alu
-	 input_Y_delayed: out std_logic_vector (31 downto 0);
-    immediate : in std_logic_vector (31 downto 0); -- extended immediate value --for adder
-    pc_updated : in integer range 0 to instr_mem_size-1; --for adder
-	 rd_address : in INTEGER RANGE 0 TO reg_size -1;
-	 rd_address_delayed: out INTEGER RANGE 0 TO reg_size -1
+    	alu_opcode : in std_logic_vector (4 downto 0); --alu
+	alu_opcode_delayed : out std_logic_vector (4 downto 0); --alu
+	pc_branch : out integer; --alu
+	branch_taken : out std_logic; --alu
+    	output_Z : out std_logic_vector(31 downto 0); --alu
+	input_Y_delayed: out std_logic_vector (31 downto 0);
+    	immediate : in std_logic_vector (31 downto 0); -- extended immediate value --for adder
+    	pc_updated : in integer range 0 to instr_mem_size-1; --for adder
+	rd_address : in INTEGER RANGE 0 TO reg_size -1;
+	rd_address_delayed: out INTEGER RANGE 0 TO reg_size -1
   );
 end Execute;
 
@@ -31,15 +32,17 @@ architecture behavior of Execute is
   signal hi, lo, rmdr, quotient : std_logic_vector (31 downto 0);
   --signal product                     : std_logic_vector (31 downto 0);
   signal product : std_logic_vector (63 downto 0);
-  signal increment : signed (31 downto 0);
+  signal increment : std_logic_vector (31 downto 0);
 
 begin
-	input_Y_delayed <= input_Y;
-	alu_opcode_delayed <= alu_opcode;
-	rd_address_delayed <= rd_address;
-  process (input_X, input_Y, alu_opcode)
+  input_Y_delayed <= input_Y;
+  alu_opcode_delayed <= alu_opcode;
+  rd_address_delayed <= rd_address;
+  pc_branch <= pc_updated + to_integer(signed(immediate(29 downto 0) & "00")); 
+  process (clock)
   begin
-	
+   if rising_edge(clock) then
+    
     case alu_opcode is
       -- R-Types 
 
@@ -174,10 +177,8 @@ begin
       when others =>
         NULL;
 
-    end case;
-
+    	end case;
+     end if;
   end process;
-  increment <= shift_left(signed(immediate),2);
-  pc_branch <= pc_updated + to_integer(increment); 
 
 end behavior;

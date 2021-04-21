@@ -12,7 +12,7 @@ entity Fetch is
 		clock: in std_logic;
 		pc_updated : out integer range 0 to instr_mem_size-1;
 		instr : out std_logic_vector (31 downto 0);
-		pc_branch : in integer range 0 to instr_mem_size-1;
+		pc_branch : in integer;
 		branch_taken : in std_logic;
 		i_waitrequest : out std_logic := '1';
 		status : out std_logic := '1';
