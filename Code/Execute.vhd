@@ -25,10 +25,9 @@ entity Execute is
   );
 end Execute;
 
--- Report Notes (remvove later)
--- -- we used 64 instead of 32 for product vector size
+
 architecture behavior of Execute is
-  -- hi & lo -> from reference of MIPS used to assign remainder (rmdr) and quotient results of a division operation
+  -- hi & lo -> from reference of MIPS
   signal hi, lo, rmdr, quotient : std_logic_vector (31 downto 0);
   --signal product                     : std_logic_vector (31 downto 0);
   signal product : std_logic_vector (63 downto 0);
@@ -121,6 +120,8 @@ begin
       when "01110" =>
         output_Z <= input_X;
 
+    -- J-Types 
+
       -- j 
       when "01111" =>
         output_Z <= input_X(31 downto 28) & input_Y(25 downto 0) & "00";
@@ -128,6 +129,8 @@ begin
        -- jal 
       when "10000" =>
         output_Z <= input_X(31 downto 28) & input_Y(25 downto 0) & "00";
+    
+     -- I-Types
 
        -- addi
       when "10001" =>
@@ -151,7 +154,7 @@ begin
 
       -- lui
       when "10110" =>
-        output_Z <= input_Y(15 downto 0) & std_logic_vector(to_unsigned(0, 16)); -- output mask x11110000 (keep only 16 MSB)
+        output_Z <= input_Y(15 downto 0) & std_logic_vector(to_unsigned(0, 16)); 
     
       -- sw
       when "10111" =>
