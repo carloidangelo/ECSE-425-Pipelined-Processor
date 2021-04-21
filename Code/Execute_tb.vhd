@@ -133,6 +133,13 @@ BEGIN
         wait for clk_period;
         assert output_Z = "00000000000000000000110000011000" report "alu error" severity error;
         
+         -- Test case 7: sw = 10111
+         report "Test case 7";
+         address <= "00000000000000000000110000011000";
+         alu_opcode <= "10111";
+         wait for clk_period;
+         assert output_Z = "00000000000000000000110000011000" report "alu error" severity error;
+
     wait; 
     END PROCESS;
 END behaviour;
