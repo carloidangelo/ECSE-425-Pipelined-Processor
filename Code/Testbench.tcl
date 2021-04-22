@@ -15,6 +15,7 @@ vcom Execute.vhd
 vcom Memory.vhd
 vcom Data_Memory.vhd
 vcom Write_Back.vhd
+vcom RegisterBlock.vhd
 
 ;# Start simulation
 vsim Pipelined_Processor_tb
