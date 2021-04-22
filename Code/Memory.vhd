@@ -12,7 +12,7 @@ entity Memory is
 		clock: in std_logic;
 		i_waitrequest : out std_logic := '1';
 		f_waitrequest : in std_logic;
-		alu_result : in std_logic_vector (31 downto 0);
+		alu_result : in std_logic_vector (31 downto 0); --result of the alu
 		writedata : in std_logic_vector (31 downto 0);
 		readdata : out std_logic_vector (31 downto 0);
 		alu_opcode : in std_logic_vector (4 downto 0);
@@ -33,7 +33,7 @@ entity Memory is
 end Memory;
 
 architecture behaviour of Memory is
-	type states is (operating,reset);
+	type states is (operating,reset); -- two staes for the memory functionality
 	signal current_state : states := operating;
 begin
 
@@ -44,19 +44,19 @@ begin
 			case current_state is
 				when operating =>
 					if (m_waitrequest = '1') then
-						--write
+						-- if there is a write request 
 						if (alu_opcode = "10111") then 
 							status <= '1';
-							m_addr <= to_integer(unsigned(alu_result(14 downto 0)));
-							m_writedata <= writedata;
+							m_addr <= to_integer(unsigned(alu_result(14 downto 0))); -- convert alu result							m_writedata <= writedata;
 							m_write <= '1';
-							current_state <= operating;
-						--read
+							current_state <= operating; --set current state
+						--if there is a read request
 						elsif (alu_opcode = "10101") then 
 							status <= '1';
-							m_addr <= to_integer(unsigned(alu_result(14 downto 0)));
+							m_addr <= to_integer(unsigned(alu_result(14 downto 0))); -- convert alu result 
 							m_read <= '1';
-							current_state <= operating;
+							current_state <= operating; --set current state
+						--if neither read nor write, do nothing
 						else 
 							alu_result_delay <= alu_result;
 							status <= '0';
@@ -73,6 +73,8 @@ begin
 					-- synchronize with other memory unit, so pipeline order is preserved
 					if (fetch_status = '1') then
 						if (f_waitrequest = '0' ) then
+						-- f_waitrequest = '0' means that the fetch stage is ready.
+						-- Memory operations should start in the next clock cycle.
 							i_waitrequest <= '1';
 							current_state <= operating;
 						else
