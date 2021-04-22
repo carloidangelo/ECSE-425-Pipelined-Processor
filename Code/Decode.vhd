@@ -57,14 +57,16 @@ signal reg_write: std_logic := '0';
 signal write_address: INTEGER RANGE 0 TO reg_size -1;
 signal write_data: std_logic_vector(31 downto 0); 
 
----jtypes have address bits
---signal j_address: std_logic_vector(25 downto 0); 
 signal read_data1_signal: std_logic_vector(31 downto 0);
 signal read_data2_signal: std_logic_vector(31 downto 0);
 
 -- data hazard detections
 signal rd_delay1: INTEGER RANGE 0 TO reg_size -1;
 signal rd_delay2: INTEGER RANGE 0 TO reg_size -1;
+
+--States one_stall and two_stall describe the behaviour of ID when a data hazard 
+--causes one stall or two stalls respectively. Likewise, states control_stall_first and 
+--control_stall_second deal with the first and second stall caused by a control hazard. 
 type states is (operating,one_stall,two_stall,control_stall_first,control_stall_second);
 signal current_state : states := operating;
 signal instr_hazard: std_logic_vector (31 downto 0);
@@ -108,9 +110,6 @@ variable rt_temp : INTEGER RANGE 0 TO reg_size -1;
 variable rd_temp : INTEGER RANGE 0 TO reg_size -1; 
 variable shamt_temp : std_logic_vector(4 downto 0);
 variable funct_temp : std_logic_vector(5 downto 0);
----jtypes have address bits, currently not sure what to do with address
---variable j_address_temp: std_logic_vector(25 downto 0);
-
 
 begin
 		if(rising_edge(clock)) then
@@ -432,7 +431,7 @@ begin
 				rd_temp := 0;
 				rs_temp := 0;
 				rt_temp := 0;
-				alu_opcode <= "00000";
+				alu_opcode <= "00000"; --add
 				rs<=rs_temp;
 				rt<=rt_temp;
 				rd<=rd_temp;
@@ -450,7 +449,7 @@ begin
 				rd_temp := 0;
 				rs_temp := 0;
 				rt_temp := 0;
-				alu_opcode <= "00000";
+				alu_opcode <= "00000";--add
 				rs<=rs_temp;
 				rt<=rt_temp;
 				rd<=rd_temp;
@@ -467,7 +466,7 @@ begin
 				rd_temp := 0;
 				rs_temp := 0;
 				rt_temp := 0;
-				alu_opcode <= "00000";
+				alu_opcode <= "00000"; --add
 				rs<=rs_temp;
 				rt<=rt_temp;
 				rd<=rd_temp;
